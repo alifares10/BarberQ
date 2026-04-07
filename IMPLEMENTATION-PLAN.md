@@ -33,8 +33,8 @@ Full design spec & root plan: `plan.md`
 
 ## Phase 2: Database & Migrations
 
-- [ ] 1. **Create SQL migrations** for all tables: `profiles`, `shops` (with `buffer_minutes` and `cancellation_window_hours`), `barbers`, `services`, `barber_services`, `working_hours`, `barber_unavailable_dates`, `shop_closures`, `appointments` (with `end_time` column), `appointment_services`, `otp_codes`, `push_tokens`
-- [ ] 2. **Create database indexes** for performance:
+- [x] 1. **Create SQL migrations** for all tables: `profiles`, `shops` (with `buffer_minutes` and `cancellation_window_hours`), `barbers`, `services`, `barber_services`, `working_hours`, `barber_unavailable_dates`, `shop_closures`, `appointments` (with `end_time` column), `appointment_services`, `otp_codes`, `push_tokens`
+- [x] 2. **Create database indexes** for performance:
   - Shop discovery: `idx_shops_active`, `idx_shops_location`
   - Barber/service lookups: `idx_barbers_shop`, `idx_services_shop`, `idx_barber_services_barber`, `idx_barber_services_service`
   - Working hours: `idx_working_hours_barber_day`
@@ -44,11 +44,11 @@ Full design spec & root plan: `plan.md`
   - Shop closures: `idx_shop_closures`
   - Appointment services: `idx_appointment_services_appointment`, `idx_appointment_services_service`
   - Auth & push: `idx_otp_phone`, `idx_push_tokens_user`
-- [ ] 3. **Set up Row Level Security (RLS)** policies:
+- [x] 3. **Set up Row Level Security (RLS)** policies:
   - Customers can read shops/barbers/services/shop_closures, create/read/cancel own appointments, read own appointment_services
   - Shop owners can CRUD their own shop, barbers, services, working hours, shop_closures; read appointments and appointment_services for their shop
-- [ ] 4. **Generate TypeScript types** from Supabase schema
-- [ ] **Phase 2 verified** (lint, type check, tests, build)
+- [x] 4. **Generate TypeScript types** from Supabase schema
+- [x] **Phase 2 verified** (lint, type check, tests, build)
 
 ## Phase 3: Authentication
 
