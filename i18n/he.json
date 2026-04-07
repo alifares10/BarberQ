@@ -1,0 +1,58 @@
+{
+  "auth": {
+    "otpDescription": "מסך זמני לאימות קוד חד-פעמי עבור זרימת ההתחברות העתידית דרך SMS4Free.",
+    "otpTitle": "אימות קוד",
+    "phoneDescription": "מסך זמני להזנת טלפון שממנו תתחיל זרימת ההתחברות באמצעות קוד.",
+    "phoneTitle": "הזנת מספר טלפון",
+    "profileDescription": "מסך זמני להשלמת פרופיל עם שם ותמונה.",
+    "profileTitle": "השלמת פרופיל",
+    "roleDescription": "מסך זמני לבחירת תפקיד: לקוח או בעל עסק.",
+    "roleTitle": "בחירת תפקיד",
+    "welcomeDescription": "הניווט, הספקים, מערכת העיצוב והלוקליזציה מחוברים. שלב הפיצ'רים מתחיל עכשיו.",
+    "welcomeTitle": "ברוכים הבאים ל-BarberQ"
+  },
+  "booking": {
+    "description": "נקודת כניסה זמנית לזרימת ההזמנה הרב-שלבית של הלקוח.",
+    "title": "זרימת הזמנה"
+  },
+  "common": {
+    "nextSteps": "השלבים הבאים"
+  },
+  "customer": {
+    "bookingsDescription": "מסך זמני להזמנות קרובות והיסטוריית תורים.",
+    "bookingsTitle": "הזמנות",
+    "exploreDescription": "מסך זמני לחיפוש מספרות קרובות, מפה וגילוי עסקים.",
+    "exploreTitle": "גילוי מספרות",
+    "favoritesDescription": "מסך זמני לעסקים שמורים.",
+    "favoritesTitle": "מועדפים",
+    "profileDescription": "מסך זמני להגדרות חשבון ושפה.",
+    "profileTitle": "פרופיל"
+  },
+  "navigation": {
+    "booking": "פתיחת זרימת הזמנה",
+    "customer": "אפליקציית לקוח",
+    "shopOwner": "אפליקציית בעל עסק"
+  },
+  "shopOwner": {
+    "barbersDescription": "מסך זמני לניהול ספרים וזמינות.",
+    "barbersTitle": "ספרים",
+    "calendarDescription": "מסך זמני ללוח הזמנות של העסק.",
+    "calendarTitle": "יומן",
+    "dashboardDescription": "מסך זמני ללוח הבקרה עם תורים וסטטיסטיקות.",
+    "dashboardTitle": "דאשבורד",
+    "profileDescription": "מסך זמני לפרופיל בעל העסק.",
+    "profileTitle": "פרופיל",
+    "shopDescription": "מסך זמני לניהול פרטי העסק וההגדרות שלו.",
+    "shopTitle": "ניהול העסק"
+  },
+  "tabs": {
+    "barbers": "ספרים",
+    "bookings": "הזמנות",
+    "calendar": "יומן",
+    "dashboard": "דאשבורד",
+    "explore": "גילוי",
+    "favorites": "מועדפים",
+    "profile": "פרופיל",
+    "shop": "עסק"
+  }
+}

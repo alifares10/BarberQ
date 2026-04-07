@@ -1,0 +1,58 @@
+{
+  "auth": {
+    "otpDescription": "Placeholder OTP verification screen for the upcoming custom SMS4Free auth flow.",
+    "otpTitle": "Verify OTP",
+    "phoneDescription": "Placeholder phone entry screen where users will start the OTP sign-in flow.",
+    "phoneTitle": "Enter Phone Number",
+    "profileDescription": "Placeholder profile setup screen for collecting the user's name and avatar.",
+    "profileTitle": "Complete Profile",
+    "roleDescription": "Placeholder role selection screen for choosing customer or shop owner.",
+    "roleTitle": "Choose Your Role",
+    "welcomeDescription": "Core navigation, providers, theming, and localization are wired. Feature work starts next.",
+    "welcomeTitle": "Welcome to BarberQ"
+  },
+  "booking": {
+    "description": "Placeholder booking stack entry point for the multi-step customer booking flow.",
+    "title": "Booking Flow"
+  },
+  "common": {
+    "nextSteps": "Next steps"
+  },
+  "customer": {
+    "bookingsDescription": "Placeholder customer bookings screen for upcoming and past appointments.",
+    "bookingsTitle": "Bookings",
+    "exploreDescription": "Placeholder explore screen for nearby barber shops, maps, and discovery.",
+    "exploreTitle": "Explore Shops",
+    "favoritesDescription": "Placeholder favorites screen for saved shops.",
+    "favoritesTitle": "Favorites",
+    "profileDescription": "Placeholder profile screen for account settings and language preferences.",
+    "profileTitle": "Profile"
+  },
+  "navigation": {
+    "booking": "Open Booking Stack",
+    "customer": "Customer App",
+    "shopOwner": "Shop Owner App"
+  },
+  "shopOwner": {
+    "barbersDescription": "Placeholder barbers screen for managing staff and availability.",
+    "barbersTitle": "Barbers",
+    "calendarDescription": "Placeholder calendar screen for all shop appointments.",
+    "calendarTitle": "Calendar",
+    "dashboardDescription": "Placeholder dashboard for today's appointments and quick stats.",
+    "dashboardTitle": "Dashboard",
+    "profileDescription": "Placeholder shop owner profile screen.",
+    "profileTitle": "Profile",
+    "shopDescription": "Placeholder shop management screen for business details and settings.",
+    "shopTitle": "Shop Management"
+  },
+  "tabs": {
+    "barbers": "Barbers",
+    "bookings": "Bookings",
+    "calendar": "Calendar",
+    "dashboard": "Dashboard",
+    "explore": "Explore",
+    "favorites": "Favorites",
+    "profile": "Profile",
+    "shop": "Shop"
+  }
+}

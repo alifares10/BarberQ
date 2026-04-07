@@ -10,8 +10,8 @@ Full design spec & root plan: `plan.md`
 
 ## Phase 1: Project Scaffolding & Core Setup
 
-- [ ] 1. **Initialize Expo project** with TypeScript template in `barber-mobile/`
-- [ ] 2. **Install core dependencies:**
+- [x] 1. **Initialize Expo project** with TypeScript template in the repo root
+- [x] 2. **Install core dependencies:**
   - Navigation: expo-router, react-native-bottom-tabs
   - State: zustand, @tanstack/react-query
   - Forms: react-hook-form, zod
@@ -21,15 +21,15 @@ Full design spec & root plan: `plan.md`
   - Maps: react-native-maps, expo-location
   - Push: expo-notifications
   - Testing: jest-expo, @testing-library/react-native
-- [ ] 3. **Set up Expo Router** file-based navigation with root layout (`app/_layout.tsx`), using native-stack navigators and `NativeTabs` for tab groups
-- [ ] 4. **Set up Tamagui** — `tamagui.config.ts` with theme tokens (colors, spacing, fonts, media queries), integrate with Expo via `@tamagui/config`
-- [ ] 5. **Set up design system** — `components/` folder with compound component wrappers over Tamagui and `index.ts` re-exports (all app code imports from `@/components`, never directly from `tamagui`)
-- [ ] 6. **Build base components** — Button (Button/ButtonText/ButtonIcon), Card, Text, Input as compound wrappers over Tamagui primitives, using `Pressable` (never TouchableOpacity)
-- [ ] 7. **Set up i18n** with i18next — `i18n/en.json`, `i18n/he.json`, RTL toggle via `I18nManager`
-- [ ] 8. **Set up Supabase client** in `lib/supabase.ts` (using `@supabase/supabase-js` with AsyncStorage for session persistence)
-- [ ] 9. **Set up TanStack Query provider** and **Zustand stores** (auth store, booking store)
-- [ ] 10. **Set up constants** — colors, config values
-- [ ] **Phase 1 verified** (lint, type check, tests, build)
+- [x] 3. **Set up Expo Router** file-based navigation with root layout (`app/_layout.tsx`), using stack navigators and tab groups
+- [x] 4. **Set up Tamagui** — `tamagui.config.ts` with theme tokens (colors, spacing, fonts, media queries) and Expo integration via Tamagui tooling
+- [x] 5. **Set up design system** — `components/` folder with compound component wrappers over Tamagui and `index.ts` re-exports (all app code imports from `@/components`, never directly from `tamagui`)
+- [x] 6. **Build base components** — Button (Button/ButtonText/ButtonIcon), Card, Text, Input as compound wrappers over Tamagui primitives
+- [x] 7. **Set up i18n** with i18next — `i18n/en.json`, `i18n/he.json`, RTL toggle via `I18nManager`
+- [x] 8. **Set up Supabase client** in `lib/supabase.ts` (using `@supabase/supabase-js` with AsyncStorage for session persistence)
+- [x] 9. **Set up TanStack Query provider** and **Zustand stores** (auth store, booking store)
+- [x] 10. **Set up constants** — colors, config values
+- [x] **Phase 1 verified** (lint, type check, tests, build)
 
 ## Phase 2: Database & Migrations
 
