@@ -4,8 +4,7 @@
 
 Building BarberQ, a standalone barber appointment scheduling mobile app from scratch. Customers discover nearby shops on a map, pick a barber, choose a service, and book a time slot. Shop owners manage their shop, barbers, services, and appointments. Auth is phone-based OTP via SMS4Free. The app supports English + Hebrew (RTL).
 
-Full design spec: `docs/superpowers/specs/2026-04-03-barber-mobile-app-design.md`
-PRD: `PRD.md`
+Full design spec & root plan: `plan.md`
 
 ---
 
@@ -102,56 +101,56 @@ PRD: `PRD.md`
 
 ## Critical Files
 
-| File/Path | Purpose |
-|-----------|---------|
-| `app/_layout.tsx` | Root layout, providers, auth guard |
-| `app/(auth)/` | All auth screens |
-| `app/(customer)/` | Customer tab screens (NativeTabs) |
-| `app/(shop-owner)/` | Shop owner tab screens (NativeTabs) |
-| `app/booking/` | Booking flow stack (native-stack) |
-| `tamagui.config.ts` | Tamagui theme, tokens, fonts, media queries |
-| `components/index.ts` | Design system re-exports (all imports via `@/components`) |
-| `components/Button/Button.tsx` | Compound wrapper over Tamagui Button |
-| `components/Card/Card.tsx` | Compound wrapper over Tamagui Card |
-| `components/Text/Text.tsx` | Wrapper over Tamagui Text with app typography |
-| `lib/supabase.ts` | Supabase client setup |
-| `stores/auth-store.ts` | Auth state (user, role, session) |
-| `stores/booking-store.ts` | Booking flow state |
-| `i18n/en.json`, `i18n/he.json` | Translation files |
-| `supabase/migrations/` | All SQL migrations |
-| `supabase/functions/send-otp/` | OTP generation + SMS4Free |
-| `supabase/functions/verify-otp/` | OTP verification + session |
-| `supabase/functions/send-push/` | Push notification sender |
+| File/Path                        | Purpose                                                   |
+| -------------------------------- | --------------------------------------------------------- |
+| `app/_layout.tsx`                | Root layout, providers, auth guard                        |
+| `app/(auth)/`                    | All auth screens                                          |
+| `app/(customer)/`                | Customer tab screens (NativeTabs)                         |
+| `app/(shop-owner)/`              | Shop owner tab screens (NativeTabs)                       |
+| `app/booking/`                   | Booking flow stack (native-stack)                         |
+| `tamagui.config.ts`              | Tamagui theme, tokens, fonts, media queries               |
+| `components/index.ts`            | Design system re-exports (all imports via `@/components`) |
+| `components/Button/Button.tsx`   | Compound wrapper over Tamagui Button                      |
+| `components/Card/Card.tsx`       | Compound wrapper over Tamagui Card                        |
+| `components/Text/Text.tsx`       | Wrapper over Tamagui Text with app typography             |
+| `lib/supabase.ts`                | Supabase client setup                                     |
+| `stores/auth-store.ts`           | Auth state (user, role, session)                          |
+| `stores/booking-store.ts`        | Booking flow state                                        |
+| `i18n/en.json`, `i18n/he.json`   | Translation files                                         |
+| `supabase/migrations/`           | All SQL migrations                                        |
+| `supabase/functions/send-otp/`   | OTP generation + SMS4Free                                 |
+| `supabase/functions/verify-otp/` | OTP verification + session                                |
+| `supabase/functions/send-push/`  | Push notification sender                                  |
 
 ---
 
 ## Tech Stack Summary
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | React Native + Expo SDK 52 (managed) |
-| Language | TypeScript |
-| Navigation | Expo Router with native-stack navigators |
-| Tabs | react-native-bottom-tabs / Expo Router NativeTabs |
-| Server state | TanStack Query v5 |
-| Local state | Zustand |
-| UI foundation | Tamagui (build-time style compilation, theming, RTL) |
-| UI components | Compound wrappers over Tamagui, re-exported from `@/components` |
-| Images | expo-image (caching, blurhash placeholders) |
-| Lists | LegendList or @shopify/flash-list (all lists virtualized) |
-| Pressables | Pressable only (no TouchableOpacity) |
-| Menus | zeego (native context menus) |
-| Modals | Native Modal with presentationStyle="formSheet" |
-| Maps | react-native-maps |
-| Location | expo-location |
-| Push | expo-notifications |
-| Animations | react-native-reanimated (GPU-accelerated, 60fps) |
-| Gestures | react-native-gesture-handler (GestureDetector for press animations) |
-| Backend | Supabase (PostgreSQL, Auth, Storage, Edge Functions) |
-| OTP/SMS | Custom OTP via SMS4Free API |
-| i18n | expo-localization + i18next + react-i18next |
-| RTL | I18nManager |
-| Forms | react-hook-form + zod |
+| Layer         | Technology                                                          |
+| ------------- | ------------------------------------------------------------------- |
+| Framework     | React Native + Expo SDK 52 (managed)                                |
+| Language      | TypeScript                                                          |
+| Navigation    | Expo Router with native-stack navigators                            |
+| Tabs          | react-native-bottom-tabs / Expo Router NativeTabs                   |
+| Server state  | TanStack Query v5                                                   |
+| Local state   | Zustand                                                             |
+| UI foundation | Tamagui (build-time style compilation, theming, RTL)                |
+| UI components | Compound wrappers over Tamagui, re-exported from `@/components`     |
+| Images        | expo-image (caching, blurhash placeholders)                         |
+| Lists         | LegendList or @shopify/flash-list (all lists virtualized)           |
+| Pressables    | Pressable only (no TouchableOpacity)                                |
+| Menus         | zeego (native context menus)                                        |
+| Modals        | Native Modal with presentationStyle="formSheet"                     |
+| Maps          | react-native-maps                                                   |
+| Location      | expo-location                                                       |
+| Push          | expo-notifications                                                  |
+| Animations    | react-native-reanimated (GPU-accelerated, 60fps)                    |
+| Gestures      | react-native-gesture-handler (GestureDetector for press animations) |
+| Backend       | Supabase (PostgreSQL, Auth, Storage, Edge Functions)                |
+| OTP/SMS       | Custom OTP via SMS4Free API                                         |
+| i18n          | expo-localization + i18next + react-i18next                         |
+| RTL           | I18nManager                                                         |
+| Forms         | react-hook-form + zod                                               |
 
 ## Performance Rules (vercel-react-native-skills)
 
@@ -183,22 +182,22 @@ PRD: `PRD.md`
 
 ## Success Metrics
 
-| Metric | Target |
-|--------|--------|
-| Booking completion rate | > 70% of users who start the flow complete it |
-| Time to book | < 60 seconds from opening the app |
-| Shop owner setup time | < 5 minutes to create shop + add first barber + service |
-| App crash rate | < 1% |
-| Push notification delivery | > 95% |
+| Metric                     | Target                                                  |
+| -------------------------- | ------------------------------------------------------- |
+| Booking completion rate    | > 70% of users who start the flow complete it           |
+| Time to book               | < 60 seconds from opening the app                       |
+| Shop owner setup time      | < 5 minutes to create shop + add first barber + service |
+| App crash rate             | < 1%                                                    |
+| Push notification delivery | > 95%                                                   |
 
 ---
 
 ## Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| SMS4Free delivery failures | Users can't sign in | Implement retry logic, consider fallback SMS provider |
-| GPS permission denied | Can't show nearby shops | Fallback to manual city/area search |
-| Simultaneous bookings | Double-booked barber | Database unique index + app-level slot filtering |
-| RTL layout bugs | Poor Hebrew UX | Dedicated RTL testing phase, Tamagui's built-in RTL support |
-| Expo SDK limitations | Can't access native APIs | Managed workflow covers all our needs; can eject if necessary |
+| Risk                       | Impact                   | Mitigation                                                    |
+| -------------------------- | ------------------------ | ------------------------------------------------------------- |
+| SMS4Free delivery failures | Users can't sign in      | Implement retry logic, consider fallback SMS provider         |
+| GPS permission denied      | Can't show nearby shops  | Fallback to manual city/area search                           |
+| Simultaneous bookings      | Double-booked barber     | Database unique index + app-level slot filtering              |
+| RTL layout bugs            | Poor Hebrew UX           | Dedicated RTL testing phase, Tamagui's built-in RTL support   |
+| Expo SDK limitations       | Can't access native APIs | Managed workflow covers all our needs; can eject if necessary |

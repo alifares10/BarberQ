@@ -11,9 +11,9 @@ BarberQ is a mobile app for barber appointment scheduling. Customers discover ne
 
 ## Users & Roles
 
-| Role | Description |
-|------|-------------|
-| **Customer** | Browses shops, books appointments, manages bookings |
+| Role           | Description                                                                       |
+| -------------- | --------------------------------------------------------------------------------- |
+| **Customer**   | Browses shops, books appointments, manages bookings                               |
 | **Shop Owner** | Manages shop profile, barbers, services, working hours, and incoming appointments |
 
 Role is selected during onboarding and stored in the `profiles` table.
@@ -22,30 +22,30 @@ Role is selected during onboarding and stored in the `profiles` table.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | React Native + Expo SDK 52 (managed workflow) |
-| Language | TypeScript |
-| Navigation | Expo Router (file-based) with native navigators |
-| Tabs | `react-native-bottom-tabs` / Expo Router `NativeTabs` |
-| Server state | TanStack Query v5 |
-| Local state | Zustand |
-| UI foundation | Tamagui (build-time style compilation, theming, RTL support) |
-| UI components | Compound component wrappers over Tamagui, re-exported from `@/components` |
-| Images | `expo-image` (not RN Image) — caching, blurhash placeholders |
-| Lists | `LegendList` or `@shopify/flash-list` — all lists must be virtualized |
-| Pressables | `Pressable` only (no TouchableOpacity/TouchableHighlight) |
-| Menus | `zeego` — native context menus and dropdowns |
-| Modals | Native `Modal` with `presentationStyle="formSheet"` |
-| Maps | react-native-maps |
-| Location | expo-location |
-| Push notifications | expo-notifications |
-| Animations | react-native-reanimated + react-native-gesture-handler (GestureDetector for press) |
-| Backend | Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime) |
-| OTP / SMS | Custom OTP via SMS4Free API (not Twilio) |
-| i18n | expo-localization + i18next + react-i18next |
-| RTL | `I18nManager` for layout flipping |
-| Forms | react-hook-form + zod |
+| Layer              | Technology                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| Framework          | React Native + Expo SDK 52 (managed workflow)                                      |
+| Language           | TypeScript                                                                         |
+| Navigation         | Expo Router (file-based) with native navigators                                    |
+| Tabs               | `react-native-bottom-tabs` / Expo Router `NativeTabs`                              |
+| Server state       | TanStack Query v5                                                                  |
+| Local state        | Zustand                                                                            |
+| UI foundation      | Tamagui (build-time style compilation, theming, RTL support)                       |
+| UI components      | Compound component wrappers over Tamagui, re-exported from `@/components`          |
+| Images             | `expo-image` (not RN Image) — caching, blurhash placeholders                       |
+| Lists              | `LegendList` or `@shopify/flash-list` — all lists must be virtualized              |
+| Pressables         | `Pressable` only (no TouchableOpacity/TouchableHighlight)                          |
+| Menus              | `zeego` — native context menus and dropdowns                                       |
+| Modals             | Native `Modal` with `presentationStyle="formSheet"`                                |
+| Maps               | react-native-maps                                                                  |
+| Location           | expo-location                                                                      |
+| Push notifications | expo-notifications                                                                 |
+| Animations         | react-native-reanimated + react-native-gesture-handler (GestureDetector for press) |
+| Backend            | Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime)                     |
+| OTP / SMS          | Custom OTP via SMS4Free API (not Twilio)                                           |
+| i18n               | expo-localization + i18next + react-i18next                                        |
+| RTL                | `I18nManager` for layout flipping                                                  |
+| Forms              | react-hook-form + zod                                                              |
 
 ### UI & Performance Guidelines (from vercel-react-native-skills)
 
@@ -77,6 +77,7 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 ## Navigation & Screens
 
 ### Auth Flow (unauthenticated)
+
 - **Welcome** — App intro / onboarding
 - **Phone Input** — Enter phone number
 - **OTP Verification** — Enter 6-digit code
@@ -84,12 +85,14 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 - **Profile Setup** — Name, avatar
 
 ### Customer (bottom tabs)
+
 1. **Explore** — Map view with nearby shops + list view with search/filter
 2. **Bookings** — Upcoming and past appointments
 3. **Favorites** — Saved shops (stretch goal)
 4. **Profile** — Account settings, language toggle (EN/HE)
 
 ### Customer Booking Stack (from Explore)
+
 - **Shop Detail** — Shop info, photos, barbers list
 - **Barber Selection** — Pick a barber
 - **Service Selection** — Pick a service (filtered by barber)
@@ -97,6 +100,7 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 - **Confirmation** — Review and confirm booking
 
 ### Shop Owner (bottom tabs)
+
 1. **Dashboard** — Today's appointments, quick stats (total bookings, cancellations)
 2. **Calendar** — Full calendar view of all bookings across barbers
 3. **Shop Management** — Edit shop info, address, photos, working hours
@@ -108,108 +112,118 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 ## Database Schema (Supabase / PostgreSQL)
 
 ### profiles
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID (PK) | From auth.users |
-| phone | text | Unique |
-| full_name | text | |
-| avatar_url | text | Nullable |
-| role | text | 'customer' \| 'shop_owner' |
-| language | text | 'en' \| 'he' |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+
+| Column     | Type        | Notes                      |
+| ---------- | ----------- | -------------------------- |
+| id         | UUID (PK)   | From auth.users            |
+| phone      | text        | Unique                     |
+| full_name  | text        |                            |
+| avatar_url | text        | Nullable                   |
+| role       | text        | 'customer' \| 'shop_owner' |
+| language   | text        | 'en' \| 'he'               |
+| created_at | timestamptz |                            |
+| updated_at | timestamptz |                            |
 
 ### shops
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID (PK) | |
-| owner_id | UUID (FK → profiles) | |
-| name | text | |
-| description | text | Nullable |
-| address | text | |
-| latitude | float8 | For map/distance |
-| longitude | float8 | For map/distance |
-| phone | text | Shop contact number |
-| cover_image_url | text | Nullable |
-| is_active | boolean | Default true |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+
+| Column          | Type                 | Notes               |
+| --------------- | -------------------- | ------------------- |
+| id              | UUID (PK)            |                     |
+| owner_id        | UUID (FK → profiles) |                     |
+| name            | text                 |                     |
+| description     | text                 | Nullable            |
+| address         | text                 |                     |
+| latitude        | float8               | For map/distance    |
+| longitude       | float8               | For map/distance    |
+| phone           | text                 | Shop contact number |
+| cover_image_url | text                 | Nullable            |
+| is_active       | boolean              | Default true        |
+| created_at      | timestamptz          |                     |
+| updated_at      | timestamptz          |                     |
 
 ### barbers
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID (PK) | |
-| shop_id | UUID (FK → shops) | |
-| name | text | |
-| avatar_url | text | Nullable |
-| bio | text | Nullable |
-| is_active | boolean | Default true |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+
+| Column     | Type              | Notes        |
+| ---------- | ----------------- | ------------ |
+| id         | UUID (PK)         |              |
+| shop_id    | UUID (FK → shops) |              |
+| name       | text              |              |
+| avatar_url | text              | Nullable     |
+| bio        | text              | Nullable     |
+| is_active  | boolean           | Default true |
+| created_at | timestamptz       |              |
+| updated_at | timestamptz       |              |
 
 ### services
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID (PK) | |
-| shop_id | UUID (FK → shops) | |
-| name | text | |
-| description | text | Nullable |
-| duration | integer | In minutes |
-| price | decimal | |
-| is_active | boolean | Default true |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+
+| Column      | Type              | Notes        |
+| ----------- | ----------------- | ------------ |
+| id          | UUID (PK)         |              |
+| shop_id     | UUID (FK → shops) |              |
+| name        | text              |              |
+| description | text              | Nullable     |
+| duration    | integer           | In minutes   |
+| price       | decimal           |              |
+| is_active   | boolean           | Default true |
+| created_at  | timestamptz       |              |
+| updated_at  | timestamptz       |              |
 
 ### barber_services (join table)
-| Column | Type | Notes |
-|--------|------|-------|
-| barber_id | UUID (FK → barbers) | Composite PK |
+
+| Column     | Type                 | Notes        |
+| ---------- | -------------------- | ------------ |
+| barber_id  | UUID (FK → barbers)  | Composite PK |
 | service_id | UUID (FK → services) | Composite PK |
 
 ### working_hours
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID (PK) | |
-| barber_id | UUID (FK → barbers) | |
-| day_of_week | integer | 0 (Sun) – 6 (Sat) |
-| start_time | time | |
-| end_time | time | |
-| is_available | boolean | |
+
+| Column       | Type                | Notes             |
+| ------------ | ------------------- | ----------------- |
+| id           | UUID (PK)           |                   |
+| barber_id    | UUID (FK → barbers) |                   |
+| day_of_week  | integer             | 0 (Sun) – 6 (Sat) |
+| start_time   | time                |                   |
+| end_time     | time                |                   |
+| is_available | boolean             |                   |
 
 ### appointments
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID (PK) | |
-| customer_id | UUID (FK → profiles) | |
-| barber_id | UUID (FK → barbers) | |
-| service_id | UUID (FK → services) | |
-| shop_id | UUID (FK → shops) | |
-| appointment_date | date | |
-| appointment_time | time | |
-| status | text | 'pending' \| 'confirmed' \| 'completed' \| 'cancelled' |
-| notes | text | Nullable, customer notes |
-| created_at | timestamptz | |
-| updated_at | timestamptz | |
+
+| Column           | Type                 | Notes                                                  |
+| ---------------- | -------------------- | ------------------------------------------------------ |
+| id               | UUID (PK)            |                                                        |
+| customer_id      | UUID (FK → profiles) |                                                        |
+| barber_id        | UUID (FK → barbers)  |                                                        |
+| service_id       | UUID (FK → services) |                                                        |
+| shop_id          | UUID (FK → shops)    |                                                        |
+| appointment_date | date                 |                                                        |
+| appointment_time | time                 |                                                        |
+| status           | text                 | 'pending' \| 'confirmed' \| 'completed' \| 'cancelled' |
+| notes            | text                 | Nullable, customer notes                               |
+| created_at       | timestamptz          |                                                        |
+| updated_at       | timestamptz          |                                                        |
 
 ### otp_codes
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID (PK) | |
-| phone | text | |
-| code | text | 6-digit code |
+
+| Column     | Type        | Notes           |
+| ---------- | ----------- | --------------- |
+| id         | UUID (PK)   |                 |
+| phone      | text        |                 |
+| code       | text        | 6-digit code    |
 | expires_at | timestamptz | 5-minute expiry |
-| verified | boolean | Default false |
-| created_at | timestamptz | |
+| verified   | boolean     | Default false   |
+| created_at | timestamptz |                 |
 
 ### push_tokens
-| Column | Type | Notes |
-|--------|------|-------|
-| id | UUID (PK) | |
-| user_id | UUID (FK → profiles) | |
-| expo_push_token | text | |
-| created_at | timestamptz | |
+
+| Column          | Type                 | Notes |
+| --------------- | -------------------- | ----- |
+| id              | UUID (PK)            |       |
+| user_id         | UUID (FK → profiles) |       |
+| expo_push_token | text                 |       |
+| created_at      | timestamptz          |       |
 
 ### Key relationships
+
 - A shop owner owns one shop (MVP; schema supports multiple for future expansion)
 - A shop has many barbers and many services
 - Barbers offer specific services (via barber_services)
@@ -245,17 +259,17 @@ profiles (1)────(N) appointments
 
 ### Table Purposes
 
-| Table | Purpose |
-|-------|---------|
-| `profiles` | Every app user (customer or shop owner). Created on first OTP verification. `role` determines which tab group they see. Links to Supabase Auth via `id`. |
-| `shops` | Each listed barber shop. `latitude` + `longitude` power map view & distance sorting. `is_active` lets owner hide their shop temporarily. |
-| `barbers` | Individual barbers at a shop. NOT app users — managed entries (name, photo, bio). `is_active` enables soft-delete without losing history. |
-| `services` | What a shop offers (Haircut, Beard Trim, etc.). `duration` (minutes) calculates time slot length. `price` displayed during booking. |
-| `barber_services` | Join table: which barbers can do which services. When customer picks a barber, they only see that barber's services. |
-| `working_hours` | Each barber's weekly schedule. One row per barber per day (up to 7 rows). `start_time`/`end_time` define the availability window. |
-| `appointments` | The core booking record linking customer + barber + service + shop. Status lifecycle: `pending` → `confirmed` → `completed` (or `cancelled` at any point). |
-| `otp_codes` | Temporary auth codes (5-min expiry). Accessed only by Edge Functions, never directly by clients. |
-| `push_tokens` | Expo push notification tokens. One per device per user. |
+| Table             | Purpose                                                                                                                                                    |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`        | Every app user (customer or shop owner). Created on first OTP verification. `role` determines which tab group they see. Links to Supabase Auth via `id`.   |
+| `shops`           | Each listed barber shop. `latitude` + `longitude` power map view & distance sorting. `is_active` lets owner hide their shop temporarily.                   |
+| `barbers`         | Individual barbers at a shop. NOT app users — managed entries (name, photo, bio). `is_active` enables soft-delete without losing history.                  |
+| `services`        | What a shop offers (Haircut, Beard Trim, etc.). `duration` (minutes) calculates time slot length. `price` displayed during booking.                        |
+| `barber_services` | Join table: which barbers can do which services. When customer picks a barber, they only see that barber's services.                                       |
+| `working_hours`   | Each barber's weekly schedule. One row per barber per day (up to 7 rows). `start_time`/`end_time` define the availability window.                          |
+| `appointments`    | The core booking record linking customer + barber + service + shop. Status lifecycle: `pending` → `confirmed` → `completed` (or `cancelled` at any point). |
+| `otp_codes`       | Temporary auth codes (5-min expiry). Accessed only by Edge Functions, never directly by clients.                                                           |
+| `push_tokens`     | Expo push notification tokens. One per device per user.                                                                                                    |
 
 ---
 
@@ -316,17 +330,17 @@ Managing a booking
 
 Supabase RLS policies ensure users can only access what they should:
 
-| Table | Customer can... | Shop Owner can... |
-|-------|----------------|-------------------|
-| `profiles` | Read/update own profile | Read/update own profile |
-| `shops` | Read all active shops | CRUD own shop |
-| `barbers` | Read active barbers of any shop | CRUD barbers of own shop |
-| `services` | Read active services of any shop | CRUD services of own shop |
-| `barber_services` | Read all | CRUD for own shop's barbers |
-| `working_hours` | Read all | CRUD for own shop's barbers |
-| `appointments` | Read/create/cancel own appointments | Read/update status for own shop's appointments |
-| `push_tokens` | Own tokens only | Own tokens only |
-| `otp_codes` | No direct access (Edge Functions only) | No direct access (Edge Functions only) |
+| Table             | Customer can...                        | Shop Owner can...                              |
+| ----------------- | -------------------------------------- | ---------------------------------------------- |
+| `profiles`        | Read/update own profile                | Read/update own profile                        |
+| `shops`           | Read all active shops                  | CRUD own shop                                  |
+| `barbers`         | Read active barbers of any shop        | CRUD barbers of own shop                       |
+| `services`        | Read active services of any shop       | CRUD services of own shop                      |
+| `barber_services` | Read all                               | CRUD for own shop's barbers                    |
+| `working_hours`   | Read all                               | CRUD for own shop's barbers                    |
+| `appointments`    | Read/create/cancel own appointments    | Read/update status for own shop's appointments |
+| `push_tokens`     | Own tokens only                        | Own tokens only                                |
+| `otp_codes`       | No direct access (Edge Functions only) | No direct access (Edge Functions only)         |
 
 ---
 
@@ -389,20 +403,20 @@ CREATE INDEX idx_push_tokens_user ON push_tokens (user_id);
 CREATE INDEX idx_otp_phone ON otp_codes (phone, verified) WHERE verified = false;
 ```
 
-| Index | Used by | Purpose |
-|-------|---------|---------|
-| `idx_shops_active` | Explore screen | Only scan active shops |
-| `idx_shops_location` | Map + distance sort | Fast lat/lng lookups for nearby shops |
-| `idx_barbers_shop` | Shop Detail | List barbers for a specific shop |
-| `idx_services_shop` | Service Selection | List services for a specific shop |
-| `idx_barber_services_*` | Service filtering | Fast join when filtering services by barber |
-| `idx_working_hours_barber_day` | Time slot generation | Barber's hours for a given day |
+| Index                          | Used by                | Purpose                                      |
+| ------------------------------ | ---------------------- | -------------------------------------------- |
+| `idx_shops_active`             | Explore screen         | Only scan active shops                       |
+| `idx_shops_location`           | Map + distance sort    | Fast lat/lng lookups for nearby shops        |
+| `idx_barbers_shop`             | Shop Detail            | List barbers for a specific shop             |
+| `idx_services_shop`            | Service Selection      | List services for a specific shop            |
+| `idx_barber_services_*`        | Service filtering      | Fast join when filtering services by barber  |
+| `idx_working_hours_barber_day` | Time slot generation   | Barber's hours for a given day               |
 | `idx_appointments_barber_date` | Time slot availability | Booked slots for a barber on a specific date |
-| `idx_appointments_customer` | Bookings tab | Customer's appointments sorted by date |
-| `idx_appointments_shop_date` | Dashboard + Calendar | Shop owner's appointments by date |
-| `idx_unique_booking` | Booking confirmation | Prevents double-booking at database level |
-| `idx_push_tokens_user` | Notifications | Token lookup when sending a push |
-| `idx_otp_phone` | Auth flow | OTP lookup during verification |
+| `idx_appointments_customer`    | Bookings tab           | Customer's appointments sorted by date       |
+| `idx_appointments_shop_date`   | Dashboard + Calendar   | Shop owner's appointments by date            |
+| `idx_unique_booking`           | Booking confirmation   | Prevents double-booking at database level    |
+| `idx_push_tokens_user`         | Notifications          | Token lookup when sending a push             |
+| `idx_otp_phone`                | Auth flow              | OTP lookup during verification               |
 
 ---
 
@@ -522,6 +536,5 @@ barber-mobile/
 
 ## Related Documents
 
-- **PRD:** `PRD.md`
 - **Implementation Plan:** `IMPLEMENTATION-PLAN.md`
-- **Database Documentation:** `docs/DATABASE.md`
+- **Database Documentation:** `DATABASE.md`
