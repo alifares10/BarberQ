@@ -10,92 +10,105 @@ Full design spec & root plan: `plan.md`
 
 ## Phase 1: Project Scaffolding & Core Setup
 
-1. **Initialize Expo project** with TypeScript template in `barber-mobile/`
-2. **Install core dependencies:**
-   - Navigation: expo-router, react-native-bottom-tabs
-   - State: zustand, @tanstack/react-query
-   - Forms: react-hook-form, zod
-   - i18n: i18next, react-i18next, expo-localization
-   - UI: tamagui, @tamagui/config, expo-image, legendlist (or @shopify/flash-list), zeego, react-native-reanimated, react-native-gesture-handler
-   - Backend: @supabase/supabase-js, @react-native-async-storage/async-storage
-   - Maps: react-native-maps, expo-location
-   - Push: expo-notifications
-3. **Set up Expo Router** file-based navigation with root layout (`app/_layout.tsx`), using native-stack navigators and `NativeTabs` for tab groups
-4. **Set up Tamagui** — `tamagui.config.ts` with theme tokens (colors, spacing, fonts, media queries), integrate with Expo via `@tamagui/config`
-5. **Set up design system** — `components/` folder with compound component wrappers over Tamagui and `index.ts` re-exports (all app code imports from `@/components`, never directly from `tamagui`)
-6. **Build base components** — Button (Button/ButtonText/ButtonIcon), Card, Text, Input as compound wrappers over Tamagui primitives, using `Pressable` (never TouchableOpacity)
-7. **Set up i18n** with i18next — `i18n/en.json`, `i18n/he.json`, RTL toggle via `I18nManager`
-8. **Set up Supabase client** in `lib/supabase.ts` (using `@supabase/supabase-js` with AsyncStorage for session persistence)
-9. **Set up TanStack Query provider** and **Zustand stores** (auth store, booking store)
-10. **Set up constants** — colors, config values
+- [ ] 1. **Initialize Expo project** with TypeScript template in `barber-mobile/`
+- [ ] 2. **Install core dependencies:**
+  - Navigation: expo-router, react-native-bottom-tabs
+  - State: zustand, @tanstack/react-query
+  - Forms: react-hook-form, zod
+  - i18n: i18next, react-i18next, expo-localization
+  - UI: tamagui, @tamagui/config, expo-image, legendlist (or @shopify/flash-list), zeego, react-native-reanimated, react-native-gesture-handler
+  - Backend: @supabase/supabase-js, @react-native-async-storage/async-storage
+  - Maps: react-native-maps, expo-location
+  - Push: expo-notifications
+  - Testing: jest-expo, @testing-library/react-native
+- [ ] 3. **Set up Expo Router** file-based navigation with root layout (`app/_layout.tsx`), using native-stack navigators and `NativeTabs` for tab groups
+- [ ] 4. **Set up Tamagui** — `tamagui.config.ts` with theme tokens (colors, spacing, fonts, media queries), integrate with Expo via `@tamagui/config`
+- [ ] 5. **Set up design system** — `components/` folder with compound component wrappers over Tamagui and `index.ts` re-exports (all app code imports from `@/components`, never directly from `tamagui`)
+- [ ] 6. **Build base components** — Button (Button/ButtonText/ButtonIcon), Card, Text, Input as compound wrappers over Tamagui primitives, using `Pressable` (never TouchableOpacity)
+- [ ] 7. **Set up i18n** with i18next — `i18n/en.json`, `i18n/he.json`, RTL toggle via `I18nManager`
+- [ ] 8. **Set up Supabase client** in `lib/supabase.ts` (using `@supabase/supabase-js` with AsyncStorage for session persistence)
+- [ ] 9. **Set up TanStack Query provider** and **Zustand stores** (auth store, booking store)
+- [ ] 10. **Set up constants** — colors, config values
+- [ ] **Phase 1 verified** (lint, type check, tests, build)
 
 ## Phase 2: Database & Migrations
 
-1. **Create SQL migrations** for all tables: `profiles`, `shops`, `barbers`, `services`, `barber_services`, `working_hours`, `appointments`, `otp_codes`, `push_tokens`
-2. **Create database indexes** for performance:
-   - Shop discovery: `idx_shops_active`, `idx_shops_location`
-   - Barber/service lookups: `idx_barbers_shop`, `idx_services_shop`, `idx_barber_services_barber`, `idx_barber_services_service`
-   - Working hours: `idx_working_hours_barber_day`
-   - Appointment queries: `idx_appointments_barber_date`, `idx_appointments_customer`, `idx_appointments_shop_date`
-   - Double-booking prevention: `idx_unique_booking` (unique partial index)
-   - Auth & push: `idx_otp_phone`, `idx_push_tokens_user`
-3. **Set up Row Level Security (RLS)** policies:
-   - Customers can read shops/barbers/services, create/read/cancel own appointments
-   - Shop owners can CRUD their own shop, barbers, services, working hours; read appointments for their shop
-4. **Generate TypeScript types** from Supabase schema
+- [ ] 1. **Create SQL migrations** for all tables: `profiles`, `shops` (with `buffer_minutes` and `cancellation_window_hours`), `barbers`, `services`, `barber_services`, `working_hours`, `barber_unavailable_dates`, `shop_closures`, `appointments` (with `end_time` column), `appointment_services`, `otp_codes`, `push_tokens`
+- [ ] 2. **Create database indexes** for performance:
+  - Shop discovery: `idx_shops_active`, `idx_shops_location`
+  - Barber/service lookups: `idx_barbers_shop`, `idx_services_shop`, `idx_barber_services_barber`, `idx_barber_services_service`
+  - Working hours: `idx_working_hours_barber_day`
+  - Appointment queries: `idx_appointments_barber_date`, `idx_appointments_customer`, `idx_appointments_shop_date`
+  - Double-booking prevention: `no_overlapping_bookings` (GiST exclusion constraint, requires `btree_gist` extension)
+  - Barber unavailable dates: `idx_barber_unavailable`
+  - Shop closures: `idx_shop_closures`
+  - Appointment services: `idx_appointment_services_appointment`, `idx_appointment_services_service`
+  - Auth & push: `idx_otp_phone`, `idx_push_tokens_user`
+- [ ] 3. **Set up Row Level Security (RLS)** policies:
+  - Customers can read shops/barbers/services/shop_closures, create/read/cancel own appointments, read own appointment_services
+  - Shop owners can CRUD their own shop, barbers, services, working hours, shop_closures; read appointments and appointment_services for their shop
+- [ ] 4. **Generate TypeScript types** from Supabase schema
+- [ ] **Phase 2 verified** (lint, type check, tests, build)
 
 ## Phase 3: Authentication
 
-1. **Create auth screens:** Welcome, Phone Input, OTP Verification, Role Selection, Profile Setup
-2. **Create Supabase Edge Function: `send-otp`** — generates 6-digit code, stores in `otp_codes` table, calls SMS4Free API
-3. **Create Supabase Edge Function: `verify-otp`** — validates code, creates/finds user via Supabase Admin Auth, returns session
-4. **Wire up auth flow** — phone → OTP → role select → profile setup → redirect to correct tab group
-5. **Auth guard** — redirect unauthenticated users to (auth) group, redirect based on role
+- [ ] 1. **Create auth screens:** Welcome, Phone Input, OTP Verification, Role Selection, Profile Setup
+- [ ] 2. **Create Supabase Edge Function: `send-otp`** — generates 6-digit code, stores in `otp_codes` table, calls SMS4Free API
+- [ ] 3. **Create Supabase Edge Function: `verify-otp`** — validates code, creates/finds user via Supabase Admin Auth, returns session
+- [ ] 4. **Wire up auth flow** — phone → OTP → role select → profile setup → redirect to correct tab group
+- [ ] 5. **Auth guard** — redirect unauthenticated users to (auth) group, redirect based on role
+- [ ] **Phase 3 verified** (lint, type check, tests, build)
 
 ## Phase 4: Shop Owner Flow
 
-1. **Shop Management screen** — create/edit shop (name, address, phone, description, cover image via `expo-image` + Supabase Storage, geocode address for lat/lng)
-2. **Barbers screen** — add/edit/deactivate barbers, set avatar (`expo-image`) and bio. Use FlashList/LegendList for barber list.
-3. **Services screen** — add/edit/deactivate services with name, duration, price. Use FlashList/LegendList for service list.
-4. **Barber-Services linking** — assign which services each barber offers
-5. **Working Hours screen** — set per-barber schedule (day of week, start/end time, available toggle)
-6. **Dashboard screen** — today's appointments in a virtualized list, quick stats (total bookings, upcoming, cancellations)
-7. **Calendar screen** — month/week view of all appointments across barbers
+- [ ] 1. **Shop Management screen** — create/edit shop (name, address, phone, description, cover image via `expo-image` + Supabase Storage, geocode address for lat/lng). Includes settings for `buffer_minutes` (cleanup time between appointments) and `cancellation_window_hours` (minimum notice for cancellations)
+- [ ] 2. **Barbers screen** — add/edit/deactivate barbers, set avatar (`expo-image`) and bio. Use FlashList/LegendList for barber list.
+- [ ] 3. **Services screen** — add/edit/deactivate services with name, duration, price. Use FlashList/LegendList for service list.
+- [ ] 4. **Barber-Services linking** — assign which services each barber offers
+- [ ] 5. **Working Hours screen** — set per-barber schedule (day of week, start/end time, available toggle). Support multiple time windows per day for breaks (e.g., morning 09:00–13:00 + afternoon 14:00–17:00)
+- [ ] 6. **Time-Off screen** — manage barber unavailable dates (vacation, holidays, sick days) via `barber_unavailable_dates` table
+- [ ] 7. **Shop Closures screen** — manage shop-wide closure dates (holidays, renovation) via `shop_closures` table
+- [ ] 8. **Dashboard screen** — today's appointments in a virtualized list, quick stats (total bookings, upcoming, cancellations)
+- [ ] 9. **Calendar screen** — month/week view of all appointments across barbers
+- [ ] **Phase 4 verified** (lint, type check, tests, build)
 
 ## Phase 5: Customer Flow
 
-1. **Explore screen** — map view (react-native-maps) showing nearby shops + FlashList/LegendList below (virtualized, memoized items, primitive props only)
-2. **Location permission** — request GPS via expo-location, sort shops by distance. **Fallback:** if GPS is denied, allow manual city/area search
-3. **Search & filter** — search by shop name, filter by service type
-4. **Shop Detail screen** — shop info, cover image via `expo-image` with blurhash placeholder, list of barbers
-5. **Booking flow screens:**
-   - Barber Selection — cards with `expo-image` avatar, name, bio. Use `Pressable` with `GestureDetector` for press animations (GPU-only: transform + opacity)
-   - Service Selection — virtualized list filtered by selected barber (via barber_services), show duration + price
-   - Date/Time Picker — calendar for date, then available time slots in a virtualized list
-   - Confirmation — review summary via native `Modal` with `presentationStyle="formSheet"`, optional notes, confirm button
-6. **Create booking** — insert into `appointments` table with status 'pending'
-7. **Bookings tab** — virtualized list of upcoming appointments (with cancel option) + past appointments
-8. **Favorites tab** (stretch) — save/unsave shops
+- [ ] 1. **Explore screen** — map view (react-native-maps) showing nearby shops + FlashList/LegendList below (virtualized, memoized items, primitive props only)
+- [ ] 2. **Location permission** — request GPS via expo-location, sort shops by distance. **Fallback:** if GPS is denied, allow manual city/area search
+- [ ] 3. **Search & filter** — search by shop name, filter by service type
+- [ ] 4. **Shop Detail screen** — shop info, cover image via `expo-image` with blurhash placeholder, list of barbers
+- [ ] 5. **Booking flow screens:**
+  - [ ] Barber Selection — cards with `expo-image` avatar, name, bio. Use `Pressable` with `GestureDetector` for press animations (GPU-only: transform + opacity)
+  - [ ] Service Selection — virtualized list filtered by selected barber (via barber_services), show duration + price. **Multiple services allowed** — total duration = SUM of selected service durations
+  - [ ] Date/Time Picker — calendar for date (check `shop_closures` first, then `barber_unavailable_dates`), then generate available time slots using multi-window working hours and total service duration (15-min step), applying `shop.buffer_minutes` to extend occupied ranges, checking for overlaps with existing bookings via `end_time`. Display in a virtualized list.
+  - [ ] Confirmation — review summary via native `Modal` with `presentationStyle="formSheet"`, optional notes, confirm button
+- [ ] 6. **Create booking** — insert into `appointments` table with `end_time` (= `appointment_time` + SUM of service durations) and status 'pending', then insert into `appointment_services` for each selected service. Database exclusion constraint prevents overlapping bookings.
+- [ ] 7. **Bookings tab** — virtualized list of upcoming appointments (with cancel option, respecting `shop.cancellation_window_hours`) + past appointments
+- [ ] 8. **Favorites tab** (stretch) — save/unsave shops
+- [ ] **Phase 5 verified** (lint, type check, tests, build)
 
 ## Phase 6: Push Notifications
 
-1. **Register push tokens** — on app launch, get Expo push token, store in `push_tokens`
-2. **Create Edge Function: `send-push-notification`** — accepts user_id + message, looks up token, calls Expo Push API
-3. **Trigger notifications:**
-   - New booking → notify shop owner
-   - Booking confirmed → notify customer
-   - Booking cancelled → notify the other party
-4. **Appointment reminders** — Supabase cron job or pg_cron to trigger 1-hour-before reminders
+- [ ] 1. **Register push tokens** — on app launch, get Expo push token, store in `push_tokens`
+- [ ] 2. **Create Edge Function: `send-push-notification`** — accepts user_id + message, looks up token, calls Expo Push API
+- [ ] 3. **Trigger notifications:**
+  - New booking → notify shop owner
+  - Booking confirmed → notify customer
+  - Booking cancelled → notify the other party
+- [ ] 4. **Appointment reminders** — Supabase cron job or pg_cron to trigger 1-hour-before reminders
+- [ ] **Phase 6 verified** (lint, type check, tests, build)
 
 ## Phase 7: Polish & RTL
 
-1. **RTL testing** — verify all screens render correctly in Hebrew
-2. **Language toggle** — in Profile screen, switch language and flip RTL
-3. **Loading states** — skeleton screens for lists and maps
-4. **Error handling** — toast notifications for failures (booking conflicts, network errors)
-5. **Empty states** — friendly messages when no shops nearby, no bookings, etc.
-6. **Safe areas** — use `contentInsetAdjustmentBehavior="automatic"` on all ScrollViews, no SafeAreaView wrappers
-7. **Styling audit** — ensure `borderCurve: 'continuous'` on all rounded corners, `gap` for spacing, CSS `boxShadow` syntax
+- [ ] 1. **RTL testing** — verify all screens render correctly in Hebrew
+- [ ] 2. **Language toggle** — in Profile screen, switch language and flip RTL
+- [ ] 3. **Loading states** — skeleton screens for lists and maps
+- [ ] 4. **Error handling** — toast notifications for failures (booking conflicts, network errors)
+- [ ] 5. **Empty states** — friendly messages when no shops nearby, no bookings, etc.
+- [ ] 6. **Safe areas** — use `contentInsetAdjustmentBehavior="automatic"` on all ScrollViews, no SafeAreaView wrappers
+- [ ] 7. **Styling audit** — ensure `borderCurve: 'continuous'` on all rounded corners, `gap` for spacing, CSS `boxShadow` syntax
+- [ ] **Phase 7 verified** (lint, type check, tests, build)
 
 ---
 
@@ -171,8 +184,11 @@ Full design spec & root plan: `plan.md`
 
 1. **Auth:** Register with phone → receive OTP → verify → select role → complete profile → land on correct tab group
 2. **Shop owner:** Create shop → add barbers → add services → link services to barbers → set working hours → verify dashboard shows data
-3. **Customer:** See shops on map → tap shop → select barber → select service → pick date/time → confirm → booking appears in Bookings tab
+3. **Customer:** See shops on map → tap shop → select barber → select multiple services → pick date/time (with buffer applied) → confirm → booking appears in Bookings tab
 4. **Time slot conflicts:** Book a slot, then try booking the same slot → should be rejected
+   4b. **Booking in the past:** Try booking a date/time in the past → should be blocked
+   4c. **Shop closures:** Mark shop as closed on a date → customer should see "Shop closed" instead of time slots
+   4d. **Cancellation window:** Set cancellation window → try cancelling within the window → should be blocked
 5. **Push:** Book an appointment → shop owner gets push notification
 6. **RTL:** Switch to Hebrew → all layouts flip, text is right-aligned, navigation is mirrored
 7. **Cancel:** Cancel a booking → status updates, other party is notified

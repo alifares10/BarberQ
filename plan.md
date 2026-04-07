@@ -41,10 +41,11 @@ Role is selected during onboarding and stored in the `profiles` table.
 | Location           | expo-location                                                                      |
 | Push notifications | expo-notifications                                                                 |
 | Animations         | react-native-reanimated + react-native-gesture-handler (GestureDetector for press) |
-| Backend            | Supabase (PostgreSQL, Auth, Storage, Edge Functions, Realtime)                     |
+| Backend            | Supabase (PostgreSQL, Auth, Storage, Edge Functions)                               |
 | OTP / SMS          | Custom OTP via SMS4Free API (not Twilio)                                           |
 | i18n               | expo-localization + i18next + react-i18next                                        |
 | RTL                | `I18nManager` for layout flipping                                                  |
+| Testing            | jest-expo, @testing-library/react-native                                           |
 | Forms              | react-hook-form + zod                                                              |
 
 ### UI & Performance Guidelines (from vercel-react-native-skills)
@@ -95,8 +96,8 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 
 - **Shop Detail** — Shop info, photos, barbers list
 - **Barber Selection** — Pick a barber
-- **Service Selection** — Pick a service (filtered by barber)
-- **Date/Time Picker** — Pick date, then available time slot
+- **Service Selection** — Pick one or more services (filtered by barber)
+- **Date/Time Picker** — Pick date (checks shop closures + barber availability), then available time slot (uses total duration + buffer)
 - **Confirmation** — Review and confirm booking
 
 ### Shop Owner (bottom tabs)
@@ -126,20 +127,22 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 
 ### shops
 
-| Column          | Type                 | Notes               |
-| --------------- | -------------------- | ------------------- |
-| id              | UUID (PK)            |                     |
-| owner_id        | UUID (FK → profiles) |                     |
-| name            | text                 |                     |
-| description     | text                 | Nullable            |
-| address         | text                 |                     |
-| latitude        | float8               | For map/distance    |
-| longitude       | float8               | For map/distance    |
-| phone           | text                 | Shop contact number |
-| cover_image_url | text                 | Nullable            |
-| is_active       | boolean              | Default true        |
-| created_at      | timestamptz          |                     |
-| updated_at      | timestamptz          |                     |
+| Column                    | Type                 | Notes                                          |
+| ------------------------- | -------------------- | ---------------------------------------------- |
+| id                        | UUID (PK)            |                                                |
+| owner_id                  | UUID (FK → profiles) |                                                |
+| name                      | text                 |                                                |
+| description               | text                 | Nullable                                       |
+| address                   | text                 |                                                |
+| latitude                  | float8               | For map/distance                               |
+| longitude                 | float8               | For map/distance                               |
+| phone                     | text                 | Shop contact number                            |
+| cover_image_url           | text                 | Nullable                                       |
+| is_active                 | boolean              | Default true                                   |
+| buffer_minutes            | integer              | Default 0, cleanup time after each appointment |
+| cancellation_window_hours | integer              | Nullable, NULL = no restriction                |
+| created_at                | timestamptz          |                                                |
+| updated_at                | timestamptz          |                                                |
 
 ### barbers
 
@@ -177,6 +180,8 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 
 ### working_hours
 
+Multiple rows per barber per day are allowed to support breaks (e.g., 09:00–13:00 morning + 14:00–17:00 afternoon = lunch break).
+
 | Column       | Type                | Notes             |
 | ------------ | ------------------- | ----------------- |
 | id           | UUID (PK)           |                   |
@@ -186,6 +191,30 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 | end_time     | time                |                   |
 | is_available | boolean             |                   |
 
+### barber_unavailable_dates
+
+Specific dates a barber is unavailable (vacation, holidays, sick days). Slot generation checks this table first — if an entry exists for the selected date, no slots are shown.
+
+| Column     | Type                | Notes                                    |
+| ---------- | ------------------- | ---------------------------------------- |
+| id         | UUID (PK)           |                                          |
+| barber_id  | UUID (FK → barbers) |                                          |
+| date       | date                |                                          |
+| reason     | text                | Nullable ('vacation', 'holiday', 'sick') |
+| created_at | timestamptz         |                                          |
+
+### shop_closures
+
+Specific dates the entire shop is closed (holidays, renovation, emergency). Checked before barber-level availability — if the shop is closed, no barbers are available.
+
+| Column     | Type              | Notes                                           |
+| ---------- | ----------------- | ----------------------------------------------- |
+| id         | UUID (PK)         |                                                 |
+| shop_id    | UUID (FK → shops) |                                                 |
+| date       | date              |                                                 |
+| reason     | text              | Nullable ('holiday', 'renovation', 'emergency') |
+| created_at | timestamptz       |                                                 |
+
 ### appointments
 
 | Column           | Type                 | Notes                                                  |
@@ -193,14 +222,23 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 | id               | UUID (PK)            |                                                        |
 | customer_id      | UUID (FK → profiles) |                                                        |
 | barber_id        | UUID (FK → barbers)  |                                                        |
-| service_id       | UUID (FK → services) |                                                        |
 | shop_id          | UUID (FK → shops)    |                                                        |
 | appointment_date | date                 |                                                        |
 | appointment_time | time                 |                                                        |
+| end_time         | time                 | appointment_time + SUM(service durations)              |
 | status           | text                 | 'pending' \| 'confirmed' \| 'completed' \| 'cancelled' |
 | notes            | text                 | Nullable, customer notes                               |
 | created_at       | timestamptz          |                                                        |
 | updated_at       | timestamptz          |                                                        |
+
+### appointment_services (join table)
+
+Links appointments to one or more services. Total duration and price are computed from the linked services.
+
+| Column         | Type                                        | Notes        |
+| -------------- | ------------------------------------------- | ------------ |
+| appointment_id | UUID (FK → appointments, ON DELETE CASCADE) | Composite PK |
+| service_id     | UUID (FK → services)                        | Composite PK |
 
 ### otp_codes
 
@@ -225,10 +263,10 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 ### Key relationships
 
 - A shop owner owns one shop (MVP; schema supports multiple for future expansion)
-- A shop has many barbers and many services
+- A shop has many barbers, many services, and many shop_closures
 - Barbers offer specific services (via barber_services)
 - Each barber has their own working_hours schedule
-- Appointments link: customer → barber → service → shop
+- Appointments link: customer → barber → services (via appointment_services) → shop
 
 ### Entity Relationship Diagram
 
@@ -236,40 +274,50 @@ Custom OTP flow using SMS4Free (Supabase's built-in phone auth is bypassed):
 profiles (1)──────(N) shops
                        │
               ┌────────┼────────┐
-              │        │        │
-           (N)│     (N)│     (N)│
-          barbers   services    │
-              │        │        │
-              └───(N:M)┘        │
-           barber_services      │
-              │                 │
-           (N)│                 │
-        working_hours           │
-              │                 │
+              │        │     (N)│
+           (N)│     (N)│  shop_closures
+          barbers   services
+              │        │
+              └───(N:M)┘
+           barber_services
+              │
+           (N)│
+        working_hours
+              │
+           (N)│
+   barber_unavailable_dates
+              │
               └────────┬────────┘
                        │
 profiles (1)────(N) appointments
+                       │
+                    (N:M)
+               appointment_services
 ```
 
 - A **profile** (shop owner) has many **shops** (1 for MVP)
-- A **shop** has many **barbers** and many **services**
+- A **shop** has many **barbers**, many **services**, and many **shop_closures**
 - **Barbers** and **services** are linked N:M via **barber_services**
-- Each **barber** has many **working_hours** entries (one per day)
-- An **appointment** connects a **profile** (customer) to a **barber** + **service** + **shop**
+- Each **barber** has many **working_hours** entries (multiple per day for breaks)
+- Each **barber** has many **barber_unavailable_dates** (vacation, holidays, sick days)
+- An **appointment** connects a **profile** (customer) to a **barber** + **shop**, with services linked via **appointment_services** (N:M)
 
 ### Table Purposes
 
-| Table             | Purpose                                                                                                                                                    |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `profiles`        | Every app user (customer or shop owner). Created on first OTP verification. `role` determines which tab group they see. Links to Supabase Auth via `id`.   |
-| `shops`           | Each listed barber shop. `latitude` + `longitude` power map view & distance sorting. `is_active` lets owner hide their shop temporarily.                   |
-| `barbers`         | Individual barbers at a shop. NOT app users — managed entries (name, photo, bio). `is_active` enables soft-delete without losing history.                  |
-| `services`        | What a shop offers (Haircut, Beard Trim, etc.). `duration` (minutes) calculates time slot length. `price` displayed during booking.                        |
-| `barber_services` | Join table: which barbers can do which services. When customer picks a barber, they only see that barber's services.                                       |
-| `working_hours`   | Each barber's weekly schedule. One row per barber per day (up to 7 rows). `start_time`/`end_time` define the availability window.                          |
-| `appointments`    | The core booking record linking customer + barber + service + shop. Status lifecycle: `pending` → `confirmed` → `completed` (or `cancelled` at any point). |
-| `otp_codes`       | Temporary auth codes (5-min expiry). Accessed only by Edge Functions, never directly by clients.                                                           |
-| `push_tokens`     | Expo push notification tokens. One per device per user.                                                                                                    |
+| Table                      | Purpose                                                                                                                                                                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`                 | Every app user (customer or shop owner). Created on first OTP verification. `role` determines which tab group they see. Links to Supabase Auth via `id`.                                                                                                                                |
+| `shops`                    | Each listed barber shop. `latitude` + `longitude` power map view & distance sorting. `is_active` lets owner hide their shop temporarily. `buffer_minutes` adds cleanup time between appointments. `cancellation_window_hours` sets minimum notice for cancellations.                    |
+| `barbers`                  | Individual barbers at a shop. NOT app users — managed entries (name, photo, bio). `is_active` enables soft-delete without losing history.                                                                                                                                               |
+| `services`                 | What a shop offers (Haircut, Beard Trim, etc.). `duration` (minutes) calculates time slot length. `price` displayed during booking.                                                                                                                                                     |
+| `barber_services`          | Join table: which barbers can do which services. When customer picks a barber, they only see that barber's services.                                                                                                                                                                    |
+| `working_hours`            | Each barber's weekly schedule. Multiple rows per barber per day allowed (e.g., morning + afternoon = lunch break). `start_time`/`end_time` define each availability window.                                                                                                             |
+| `barber_unavailable_dates` | Specific dates a barber is off (vacation, holidays, sick). Checked before generating time slots — if an entry exists, no slots are shown for that date.                                                                                                                                 |
+| `shop_closures`            | Specific dates the entire shop is closed (holidays, renovation). Checked before barber-level availability — if the shop is closed, no barbers are available.                                                                                                                            |
+| `appointments`             | The core booking record linking customer + barber + shop. Stores `end_time` (= `appointment_time` + SUM of service durations) for overlap detection. Services linked via `appointment_services`. Status lifecycle: `pending` → `confirmed` → `completed` (or `cancelled` at any point). |
+| `appointment_services`     | Join table linking appointments to their services (supports multiple services per booking). Total duration and price are computed from linked services.                                                                                                                                 |
+| `otp_codes`                | Temporary auth codes (5-min expiry). Accessed only by Edge Functions, never directly by clients.                                                                                                                                                                                        |
+| `push_tokens`              | Expo push notification tokens. One per device per user.                                                                                                                                                                                                                                 |
 
 ---
 
@@ -288,21 +336,38 @@ Customer taps a shop
 Customer picks a barber
     → Query: services JOIN barber_services WHERE barber_id = Y AND is_active = true
 
-Customer picks a service (e.g., Haircut, 30 min)
-    → Query: working_hours WHERE barber_id = Y AND day_of_week = Z
-    → Get start_time & end_time for that day
+Customer picks services (multiple allowed, e.g., Haircut 30 min + Beard Trim 15 min = 45 min total)
+    → Total duration = SUM(service.duration for each selected)
 
-    → Query: appointments WHERE barber_id = Y AND appointment_date = Z
-    → Get already-booked time slots
+Customer picks a date
+    → Query: shop_closures WHERE shop_id = X AND date = Z
+    → If entry exists → show "Shop closed on this date"
+
+    → Query: barber_unavailable_dates WHERE barber_id = Y AND date = Z
+    → If entry exists → show "Barber unavailable on this date"
+
+    → Query: working_hours WHERE barber_id = Y AND day_of_week = Z AND is_available = true
+    → Get all time windows for that day (multiple rows = breaks supported)
+
+    → Query: appointments WHERE barber_id = Y AND appointment_date = Z AND status != 'cancelled'
+    → Get already-booked time ranges (appointment_time → end_time + shop.buffer_minutes)
 
     → Generate available slots:
-        Working hours: 09:00–17:00
-        Service duration: 30 min
-        Already booked: [09:00, 10:30, 14:00]
-        Available: [09:30, 10:00, 11:00, 11:30, 12:00, ... ]
+        Time windows: [09:00–13:00, 14:00–17:00]  (lunch break built in)
+        Total duration: 45 min (sum of selected services)
+        Buffer: shop.buffer_minutes (e.g., 10 min)
+        Slot step: 15 min
+
+        For each time window:
+          slot_start = window.start_time
+          While slot_start + duration ≤ window.end_time:
+            If [slot_start, slot_start + duration] doesn't overlap any [booking.start, booking.end + buffer]:
+              Add slot_start to available list
+            slot_start += 15 min
 
 Customer confirms
-    → INSERT into appointments (customer_id, barber_id, service_id, shop_id, date, time, status='pending')
+    → INSERT into appointments (customer_id, barber_id, shop_id, date, time, end_time, status='pending')
+    → INSERT into appointment_services (appointment_id, service_id) for each selected service
     → Trigger push notification to shop owner
 ```
 
@@ -330,17 +395,20 @@ Managing a booking
 
 Supabase RLS policies ensure users can only access what they should:
 
-| Table             | Customer can...                        | Shop Owner can...                              |
-| ----------------- | -------------------------------------- | ---------------------------------------------- |
-| `profiles`        | Read/update own profile                | Read/update own profile                        |
-| `shops`           | Read all active shops                  | CRUD own shop                                  |
-| `barbers`         | Read active barbers of any shop        | CRUD barbers of own shop                       |
-| `services`        | Read active services of any shop       | CRUD services of own shop                      |
-| `barber_services` | Read all                               | CRUD for own shop's barbers                    |
-| `working_hours`   | Read all                               | CRUD for own shop's barbers                    |
-| `appointments`    | Read/create/cancel own appointments    | Read/update status for own shop's appointments |
-| `push_tokens`     | Own tokens only                        | Own tokens only                                |
-| `otp_codes`       | No direct access (Edge Functions only) | No direct access (Edge Functions only)         |
+| Table                      | Customer can...                        | Shop Owner can...                              |
+| -------------------------- | -------------------------------------- | ---------------------------------------------- |
+| `profiles`                 | Read/update own profile                | Read/update own profile                        |
+| `shops`                    | Read all active shops                  | CRUD own shop                                  |
+| `barbers`                  | Read active barbers of any shop        | CRUD barbers of own shop                       |
+| `services`                 | Read active services of any shop       | CRUD services of own shop                      |
+| `barber_services`          | Read all                               | CRUD for own shop's barbers                    |
+| `working_hours`            | Read all                               | CRUD for own shop's barbers                    |
+| `appointments`             | Read/create/cancel own appointments    | Read/update status for own shop's appointments |
+| `appointment_services`     | Read own appointment's services        | Read own shop's appointment services           |
+| `barber_unavailable_dates` | Read all                               | CRUD for own shop's barbers                    |
+| `shop_closures`            | Read all                               | CRUD for own shop                              |
+| `push_tokens`              | Own tokens only                        | Own tokens only                                |
+| `otp_codes`                | No direct access (Edge Functions only) | No direct access (Edge Functions only)         |
 
 ---
 
@@ -348,19 +416,28 @@ Supabase RLS policies ensure users can only access what they should:
 
 Two layers prevent double-booking the same barber:
 
-**1. Application level:** Before showing time slots, the app queries existing appointments and filters them out.
+**1. Application level:** Before showing time slots, the app queries existing appointments (with their `end_time`) and filters out any slots that would overlap with an existing booking.
 
-**2. Database level:** A partial unique index rejects conflicting inserts:
+**2. Database level:** A GiST exclusion constraint rejects overlapping inserts — not just exact same-time collisions, but any time range overlap:
 
 ```sql
--- Prevent double-booking: no two non-cancelled appointments
--- for the same barber at the same date + time
-CREATE UNIQUE INDEX idx_unique_booking
-ON appointments (barber_id, appointment_date, appointment_time)
-WHERE status != 'cancelled';
+-- Required extension for exclusion constraints with non-GiST types
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+-- Prevent overlapping bookings for the same barber on the same date
+ALTER TABLE appointments ADD CONSTRAINT no_overlapping_bookings
+  EXCLUDE USING gist (
+    barber_id WITH =,
+    appointment_date WITH =,
+    tsrange(
+      appointment_date + appointment_time,
+      appointment_date + end_time
+    ) WITH &&
+  )
+  WHERE (status != 'cancelled');
 ```
 
-If two customers tap "confirm" at the exact same moment, the database rejects the second insert.
+If two customers tap "confirm" at the exact same moment and their time ranges overlap, the database rejects the second insert. This handles variable-duration services correctly (e.g., a 60-min haircut at 09:00 blocks a 30-min trim at 09:30).
 
 ---
 
@@ -391,10 +468,24 @@ CREATE INDEX idx_appointments_customer ON appointments (customer_id, appointment
 CREATE INDEX idx_appointments_shop_date ON appointments (shop_id, appointment_date)
   WHERE status != 'cancelled';
 
--- Double-booking prevention (unique constraint)
-CREATE UNIQUE INDEX idx_unique_booking
-  ON appointments (barber_id, appointment_date, appointment_time)
-  WHERE status != 'cancelled';
+-- Double-booking prevention (exclusion constraint — prevents overlapping time ranges)
+-- Requires: CREATE EXTENSION IF NOT EXISTS btree_gist;
+-- ALTER TABLE appointments ADD CONSTRAINT no_overlapping_bookings
+--   EXCLUDE USING gist (
+--     barber_id WITH =,
+--     appointment_date WITH =,
+--     tsrange(appointment_date + appointment_time, appointment_date + end_time) WITH &&
+--   ) WHERE (status != 'cancelled');
+
+-- Barber unavailable dates
+CREATE UNIQUE INDEX idx_barber_unavailable ON barber_unavailable_dates (barber_id, date);
+
+-- Shop closures
+CREATE UNIQUE INDEX idx_shop_closures ON shop_closures (shop_id, date);
+
+-- Appointment-service lookup
+CREATE INDEX idx_appointment_services_appointment ON appointment_services (appointment_id);
+CREATE INDEX idx_appointment_services_service ON appointment_services (service_id);
 
 -- Push token lookup
 CREATE INDEX idx_push_tokens_user ON push_tokens (user_id);
@@ -403,20 +494,23 @@ CREATE INDEX idx_push_tokens_user ON push_tokens (user_id);
 CREATE INDEX idx_otp_phone ON otp_codes (phone, verified) WHERE verified = false;
 ```
 
-| Index                          | Used by                | Purpose                                      |
-| ------------------------------ | ---------------------- | -------------------------------------------- |
-| `idx_shops_active`             | Explore screen         | Only scan active shops                       |
-| `idx_shops_location`           | Map + distance sort    | Fast lat/lng lookups for nearby shops        |
-| `idx_barbers_shop`             | Shop Detail            | List barbers for a specific shop             |
-| `idx_services_shop`            | Service Selection      | List services for a specific shop            |
-| `idx_barber_services_*`        | Service filtering      | Fast join when filtering services by barber  |
-| `idx_working_hours_barber_day` | Time slot generation   | Barber's hours for a given day               |
-| `idx_appointments_barber_date` | Time slot availability | Booked slots for a barber on a specific date |
-| `idx_appointments_customer`    | Bookings tab           | Customer's appointments sorted by date       |
-| `idx_appointments_shop_date`   | Dashboard + Calendar   | Shop owner's appointments by date            |
-| `idx_unique_booking`           | Booking confirmation   | Prevents double-booking at database level    |
-| `idx_push_tokens_user`         | Notifications          | Token lookup when sending a push             |
-| `idx_otp_phone`                | Auth flow              | OTP lookup during verification               |
+| Index                          | Used by                | Purpose                                        |
+| ------------------------------ | ---------------------- | ---------------------------------------------- |
+| `idx_shops_active`             | Explore screen         | Only scan active shops                         |
+| `idx_shops_location`           | Map + distance sort    | Fast lat/lng lookups for nearby shops          |
+| `idx_barbers_shop`             | Shop Detail            | List barbers for a specific shop               |
+| `idx_services_shop`            | Service Selection      | List services for a specific shop              |
+| `idx_barber_services_*`        | Service filtering      | Fast join when filtering services by barber    |
+| `idx_working_hours_barber_day` | Time slot generation   | Barber's hours for a given day                 |
+| `idx_appointments_barber_date` | Time slot availability | Booked slots for a barber on a specific date   |
+| `idx_appointments_customer`    | Bookings tab           | Customer's appointments sorted by date         |
+| `idx_appointments_shop_date`   | Dashboard + Calendar   | Shop owner's appointments by date              |
+| `no_overlapping_bookings`      | Booking confirmation   | Prevents overlapping bookings (GiST exclusion) |
+| `idx_barber_unavailable`       | Time slot generation   | Check if barber is off on a specific date      |
+| `idx_shop_closures`            | Time slot generation   | Check if shop is closed on a specific date     |
+| `idx_appointment_services_*`   | Booking detail         | Services linked to an appointment              |
+| `idx_push_tokens_user`         | Notifications          | Token lookup when sending a push               |
+| `idx_otp_phone`                | Auth flow              | OTP lookup during verification                 |
 
 ---
 
