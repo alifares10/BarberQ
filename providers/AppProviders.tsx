@@ -7,6 +7,7 @@ import { TamaguiProvider } from 'tamagui';
 import '@/lib/i18n';
 
 import { queryClient } from '@/lib/query-client';
+import { AuthProvider } from '@/providers/AuthProvider';
 import tamaguiConfig from '@/tamagui.config';
 
 export function AppProviders({ children }: PropsWithChildren) {
@@ -15,12 +16,14 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <TamaguiProvider
-          config={tamaguiConfig}
-          defaultTheme={colorScheme === 'dark' ? 'dark' : 'light'}
-        >
-          {children}
-        </TamaguiProvider>
+        <AuthProvider>
+          <TamaguiProvider
+            config={tamaguiConfig}
+            defaultTheme={colorScheme === 'dark' ? 'dark' : 'light'}
+          >
+            {children}
+          </TamaguiProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

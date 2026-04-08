@@ -1,26 +1,64 @@
-import type { Session } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
 
-export type ProfileRole = 'customer' | 'shop_owner' | null;
+import type { Database } from '@/types/database';
+
+export type ProfileRole = 'customer' | 'shop_owner';
+export type Profile = Database['public']['Tables']['profiles']['Row'];
 
 type AuthStore = {
-  role: ProfileRole;
+  authUser: User | null;
+  isHydrated: boolean;
+  pendingPhone: string | null;
+  pendingRole: ProfileRole | null;
+  profile: Profile | null;
   session: Session | null;
-  setRole: (role: ProfileRole) => void;
-  setSession: (session: Session | null) => void;
+  clearOnboardingDraft: () => void;
   reset: () => void;
+  setAuthState: (state: {
+    authUser: User | null;
+    profile: Profile | null;
+    session: Session | null;
+  }) => void;
+  setHydrated: (isHydrated: boolean) => void;
+  setPendingPhone: (phone: string | null) => void;
+  setPendingRole: (role: ProfileRole | null) => void;
+  setProfile: (profile: Profile | null) => void;
 };
 
 export const useAuthStore = create<AuthStore>((set) => ({
-  role: null,
+  authUser: null,
+  clearOnboardingDraft: () => {
+    set({ pendingPhone: null, pendingRole: null });
+  },
+  isHydrated: false,
+  pendingPhone: null,
+  pendingRole: null,
+  profile: null,
   session: null,
   reset: () => {
-    set({ role: null, session: null });
+    set({
+      authUser: null,
+      isHydrated: true,
+      pendingPhone: null,
+      pendingRole: null,
+      profile: null,
+      session: null,
+    });
   },
-  setRole: (role) => {
-    set({ role });
+  setAuthState: ({ authUser, profile, session }) => {
+    set({ authUser, profile, session });
   },
-  setSession: (session) => {
-    set({ session });
+  setHydrated: (isHydrated) => {
+    set({ isHydrated });
+  },
+  setPendingPhone: (pendingPhone) => {
+    set({ pendingPhone });
+  },
+  setPendingRole: (pendingRole) => {
+    set({ pendingRole });
+  },
+  setProfile: (profile) => {
+    set({ profile });
   },
 }));

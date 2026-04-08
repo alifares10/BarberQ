@@ -52,12 +52,12 @@ Full design spec & root plan: `plan.md`
 
 ## Phase 3: Authentication
 
-- [ ] 1. **Create auth screens:** Welcome, Phone Input, OTP Verification, Role Selection, Profile Setup
-- [ ] 2. **Create Supabase Edge Function: `send-otp`** — generates 6-digit code, stores in `otp_codes` table, calls SMS4Free API
-- [ ] 3. **Create Supabase Edge Function: `verify-otp`** — validates code, creates/finds user via Supabase Admin Auth, returns session
-- [ ] 4. **Wire up auth flow** — phone → OTP → role select → profile setup → redirect to correct tab group
-- [ ] 5. **Auth guard** — redirect unauthenticated users to (auth) group, redirect based on role
-- [ ] **Phase 3 verified** (lint, type check, tests, build)
+- [x] 1. **Create auth screens:** Welcome, Phone Input, OTP Verification, Role Selection, Profile Setup (name only for now; avatar deferred)
+- [x] 2. **Create Supabase Edge Function: `send-otp`** — generates 6-digit code, stores in `otp_codes` table, calls SMS4Free API
+- [x] 3. **Create Supabase Edge Function: `verify-otp`** — validates code, creates/finds user via Supabase Admin Auth, returns session
+- [x] 4. **Wire up auth flow** — phone → OTP → role select → profile setup → redirect to correct tab group
+- [x] 5. **Auth guard** — redirect unauthenticated users to (auth) group, redirect based on role
+- [x] **Phase 3 verified** (lint, type check, tests, build)
 
 ## Phase 4: Shop Owner Flow
 
