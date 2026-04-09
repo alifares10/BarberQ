@@ -61,16 +61,16 @@ Full design spec & root plan: `plan.md`
 
 ## Phase 4: Shop Owner Flow
 
-- [ ] 1. **Shop Management screen** — create/edit shop (name, address, phone, description, cover image via `expo-image` + Supabase Storage, geocode address for lat/lng). Includes settings for `buffer_minutes` (cleanup time between appointments) and `cancellation_window_hours` (minimum notice for cancellations)
-- [ ] 2. **Barbers screen** — add/edit/deactivate barbers, set avatar (`expo-image`) and bio. Use FlashList/LegendList for barber list.
-- [ ] 3. **Services screen** — add/edit/deactivate services with name, duration, price. Use FlashList/LegendList for service list.
-- [ ] 4. **Barber-Services linking** — assign which services each barber offers
-- [ ] 5. **Working Hours screen** — set per-barber schedule (day of week, start/end time, available toggle). Support multiple time windows per day for breaks (e.g., morning 09:00–13:00 + afternoon 14:00–17:00)
-- [ ] 6. **Time-Off screen** — manage barber unavailable dates (vacation, holidays, sick days) via `barber_unavailable_dates` table
-- [ ] 7. **Shop Closures screen** — manage shop-wide closure dates (holidays, renovation) via `shop_closures` table
-- [ ] 8. **Dashboard screen** — today's appointments in a virtualized list, quick stats (total bookings, upcoming, cancellations)
-- [ ] 9. **Calendar screen** — month/week view of all appointments across barbers
-- [ ] **Phase 4 verified** (lint, type check, tests, build)
+- [x] 1. **Shop Management screen** — create/edit shop (name, address, phone, description, cover image via `expo-image` + Supabase Storage, geocode address for lat/lng). Includes settings for `buffer_minutes` (cleanup time between appointments) and `cancellation_window_hours` (minimum notice for cancellations)
+- [x] 2. **Barbers screen** — add/edit/deactivate barbers, set avatar (`expo-image`) and bio. Use FlashList/LegendList for barber list.
+- [x] 3. **Services screen** — add/edit/deactivate services with name, duration, price. Use FlashList/LegendList for service list.
+- [x] 4. **Barber-Services linking** — assign which services each barber offers
+- [x] 5. **Working Hours screen** — set per-barber schedule (day of week, start/end time, available toggle). Support multiple time windows per day for breaks (e.g., morning 09:00–13:00 + afternoon 14:00–17:00)
+- [x] 6. **Time-Off screen** — manage barber unavailable dates (vacation, holidays, sick days) via `barber_unavailable_dates` table
+- [x] 7. **Shop Closures screen** — manage shop-wide closure dates (holidays, renovation) via `shop_closures` table
+- [x] 8. **Dashboard screen** — today's appointments in a virtualized list, quick stats (total bookings, upcoming, cancellations)
+- [x] 9. **Calendar screen** — month/week view of all appointments across barbers
+- [x] **Phase 4 verified** (lint, type check, tests, build)
 
 ## Phase 5: Customer Flow
 
