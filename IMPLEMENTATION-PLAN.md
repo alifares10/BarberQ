@@ -74,19 +74,19 @@ Full design spec & root plan: `plan.md`
 
 ## Phase 5: Customer Flow
 
-- [ ] 1. **Explore screen** — map view (react-native-maps) showing nearby shops + FlashList/LegendList below (virtualized, memoized items, primitive props only)
-- [ ] 2. **Location permission** — request GPS via expo-location, sort shops by distance. **Fallback:** if GPS is denied, allow manual city/area search
-- [ ] 3. **Search & filter** — search by shop name, filter by service type
-- [ ] 4. **Shop Detail screen** — shop info, cover image via `expo-image` with blurhash placeholder, list of barbers
-- [ ] 5. **Booking flow screens:**
-  - [ ] Barber Selection — cards with `expo-image` avatar, name, bio. Use `Pressable` with `GestureDetector` for press animations (GPU-only: transform + opacity)
-  - [ ] Service Selection — virtualized list filtered by selected barber (via barber_services), show duration + price. **Multiple services allowed** — total duration = SUM of selected service durations
-  - [ ] Date/Time Picker — calendar for date (check `shop_closures` first, then `barber_unavailable_dates`), then generate available time slots using multi-window working hours and total service duration (15-min step), applying `shop.buffer_minutes` to extend occupied ranges, checking for overlaps with existing bookings via `end_time`. Display in a virtualized list.
-  - [ ] Confirmation — review summary via native `Modal` with `presentationStyle="formSheet"`, optional notes, confirm button
-- [ ] 6. **Create booking** — insert into `appointments` table with `end_time` (= `appointment_time` + SUM of service durations) and status 'pending', then insert into `appointment_services` for each selected service. Database exclusion constraint prevents overlapping bookings.
-- [ ] 7. **Bookings tab** — virtualized list of upcoming appointments (with cancel option, respecting `shop.cancellation_window_hours`) + past appointments
+- [x] 1. **Explore screen** — map view (react-native-maps) showing nearby shops + FlashList/LegendList below (virtualized, memoized items, primitive props only)
+- [x] 2. **Location permission** — request GPS via expo-location, sort shops by distance. **Fallback:** if GPS is denied, allow manual city/area search
+- [x] 3. **Search & filter** — search by shop name, filter by service type
+- [x] 4. **Shop Detail screen** — shop info, cover image via `expo-image` with blurhash placeholder, list of barbers
+- [x] 5. **Booking flow screens:**
+  - [x] Barber Selection — cards with `expo-image` avatar, name, bio. Use `Pressable` with `GestureDetector` for press animations (GPU-only: transform + opacity)
+  - [x] Service Selection — virtualized list filtered by selected barber (via barber_services), show duration + price. **Multiple services allowed** — total duration = SUM of selected service durations
+  - [x] Date/Time Picker — calendar for date (check `shop_closures` first, then `barber_unavailable_dates`), then generate available time slots using multi-window working hours and total service duration (15-min step), applying `shop.buffer_minutes` to extend occupied ranges, checking for overlaps with existing bookings via `end_time`. Display in a virtualized list.
+  - [x] Confirmation — review summary via native `Modal` with `presentationStyle="formSheet"`, optional notes, confirm button
+- [x] 6. **Create booking** — insert into `appointments` table with `end_time` (= `appointment_time` + SUM of service durations) and status 'pending', then insert into `appointment_services` for each selected service. Database exclusion constraint prevents overlapping bookings.
+- [x] 7. **Bookings tab** — virtualized list of upcoming appointments (with cancel option, respecting `shop.cancellation_window_hours`) + past appointments
 - [ ] 8. **Favorites tab** (stretch) — save/unsave shops
-- [ ] **Phase 5 verified** (lint, type check, tests, build)
+- [x] **Phase 5 verified** (lint, type check, tests, build)
 
 ## Phase 6: Push Notifications
 

@@ -26,5 +26,12 @@ export default function BookingLayout() {
     return <Redirect href="/(shop-owner)" />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="[shopId]" />
+      <Stack.Screen name="services" />
+      <Stack.Screen name="datetime" />
+    </Stack>
+  );
 }
