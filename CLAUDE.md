@@ -10,7 +10,7 @@ Barber appointment scheduling mobile app (iOS & Android). Two roles: customers b
 
 ## Tech Stack
 
-React Native + Expo SDK 52 (managed), TypeScript, Expo Router, Tamagui, TanStack Query v5, Zustand, Supabase, i18next. Full list in `plan.md`.
+React Native + Expo SDK 54 (managed), TypeScript, Expo Router, Tamagui, TanStack Query v5, Zustand, Supabase, i18next. Full list in `plan.md`.
 
 ## Code Conventions
 

@@ -244,7 +244,7 @@ export default function ShopManagementScreen() {
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
       <View style={styles.container}>
         <Card>
-          <Text fontFamily="$heading" fontSize={28} fontWeight="800">
+          <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
             {t('shopOwner.shopManagement.title')}
           </Text>
           <Text color="$colorMuted">{t('shopOwner.shopManagement.description')}</Text>

@@ -297,7 +297,7 @@ export default function CustomerBookingsScreen() {
         ListHeaderComponent={
           <View style={styles.headerContent}>
             <Card>
-              <Text fontFamily="$heading" fontSize={28} fontWeight="800">
+              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
                 {t('customer.bookings.title')}
               </Text>
               <Text color="$colorMuted">{t('customer.bookings.description')}</Text>
@@ -313,7 +313,7 @@ export default function CustomerBookingsScreen() {
         contentContainerStyle={styles.listContent}
         contentInsetAdjustmentBehavior="automatic"
         data={rows}
-        estimatedItemSize={160}
+
         getItemType={(item) => item.type}
         keyExtractor={(item) => item.id}
         renderItem={renderRow}

@@ -287,7 +287,7 @@ export default function ExploreScreen() {
           contentContainerStyle={styles.listContent}
           contentInsetAdjustmentBehavior="automatic"
           data={shopRows}
-          estimatedItemSize={220}
+
           keyExtractor={(item) => item.shopId}
           renderItem={renderShop}
         />

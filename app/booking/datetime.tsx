@@ -432,7 +432,7 @@ export default function BookingDateTimeScreen() {
     <View style={styles.screen}>
       <View style={styles.contentContainer}>
         <Card>
-          <Text fontFamily="$heading" fontSize={28} fontWeight="800">
+          <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
             {t('customer.datetime.title')}
           </Text>
           <Text color="$colorMuted">{t('customer.datetime.description')}</Text>
@@ -444,7 +444,7 @@ export default function BookingDateTimeScreen() {
             contentContainerStyle={styles.dateListContent}
             contentInsetAdjustmentBehavior="automatic"
             data={dateOptions}
-            estimatedItemSize={92}
+
             extraData={selectedDate}
             horizontal
             keyExtractor={(item) => item.dateIso}
@@ -491,7 +491,7 @@ export default function BookingDateTimeScreen() {
               contentContainerStyle={styles.slotListContent}
               contentInsetAdjustmentBehavior="automatic"
               data={timeSlotRows}
-              estimatedItemSize={56}
+
               extraData={selectedTime}
               keyExtractor={(item) => item.time}
               numColumns={4}
@@ -531,7 +531,7 @@ export default function BookingDateTimeScreen() {
       >
         <View style={styles.modalScreen}>
           <Card>
-            <Text fontFamily="$heading" fontSize={26} fontWeight="800">
+            <Text fontFamily="$heading" fontSize={26} fontWeight="800" lineHeight={32}>
               {t('customer.datetime.reviewTitle')}
             </Text>
             <Text color="$colorMuted">{t('customer.datetime.shopLabel', { shopName })}</Text>
@@ -546,7 +546,7 @@ export default function BookingDateTimeScreen() {
               <FlashList
                 ItemSeparatorComponent={() => <View style={styles.summaryServiceSeparator} />}
                 data={selectedServices}
-                estimatedItemSize={68}
+
                 keyExtractor={(item) => item.id}
                 renderItem={renderSelectedService}
               />

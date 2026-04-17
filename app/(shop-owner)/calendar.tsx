@@ -215,7 +215,7 @@ export default function CalendarScreen() {
         ListHeaderComponent={
           <View style={styles.headerContent}>
             <Card>
-              <Text fontFamily="$heading" fontSize={28} fontWeight="800">
+              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
                 {t('shopOwner.calendar.title')}
               </Text>
               <Text color="$colorMuted">{t('shopOwner.calendar.description')}</Text>
@@ -275,7 +275,7 @@ export default function CalendarScreen() {
         contentContainerStyle={styles.listContent}
         contentInsetAdjustmentBehavior="automatic"
         data={shopId != null && !appointmentsQuery.isError ? calendarRows : []}
-        estimatedItemSize={120}
+
         keyExtractor={(item) => item.id}
         renderItem={renderRow}
       />

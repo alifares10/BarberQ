@@ -125,7 +125,7 @@ export default function DashboardScreen() {
         ListHeaderComponent={
           <View style={styles.headerContent}>
             <Card>
-              <Text fontFamily="$heading" fontSize={28} fontWeight="800">
+              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
                 {t('shopOwner.dashboard.title')}
               </Text>
               <Text color="$colorMuted">{t('shopOwner.dashboard.description')}</Text>
@@ -155,21 +155,21 @@ export default function DashboardScreen() {
                 <View style={styles.statsRow}>
                   <Card style={styles.statCard}>
                     <Text fontWeight="700">{t('shopOwner.dashboard.stats.total')}</Text>
-                    <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
                       {stats.total}
                     </Text>
                   </Card>
 
                   <Card style={styles.statCard}>
                     <Text fontWeight="700">{t('shopOwner.dashboard.stats.upcoming')}</Text>
-                    <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
                       {stats.upcoming}
                     </Text>
                   </Card>
 
                   <Card style={styles.statCard}>
                     <Text fontWeight="700">{t('shopOwner.dashboard.stats.cancelled')}</Text>
-                    <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
                       {stats.cancelled}
                     </Text>
                   </Card>
@@ -186,7 +186,7 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.listContent}
         contentInsetAdjustmentBehavior="automatic"
         data={shopId != null && !appointmentsQuery.isError ? appointments : []}
-        estimatedItemSize={132}
+
         keyExtractor={(item) => item.id}
         renderItem={renderAppointment}
       />

@@ -600,7 +600,7 @@ export default function BarbersScreen() {
     return (
       <View style={styles.screen}>
         <Card>
-          <Text fontFamily="$heading" fontSize={26} fontWeight="800">
+          <Text fontFamily="$heading" fontSize={26} fontWeight="800" lineHeight={32}>
             {t('shopOwner.managementHub.missingShopTitle')}
           </Text>
           <Text color="$colorMuted">{t('shopOwner.managementHub.missingShopDescription')}</Text>
@@ -628,7 +628,7 @@ export default function BarbersScreen() {
   return (
     <View style={styles.screen}>
       <Card>
-        <Text fontFamily="$heading" fontSize={28} fontWeight="800">
+        <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
           {t('shopOwner.managementHub.title')}
         </Text>
         <Text color="$colorMuted">{t('shopOwner.managementHub.description')}</Text>
@@ -663,7 +663,7 @@ export default function BarbersScreen() {
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={styles.listContainer}
           data={barbersQuery.data ?? []}
-          estimatedItemSize={188}
+
           keyExtractor={(item) => item.id}
           renderItem={renderBarberItem}
         />
@@ -677,7 +677,7 @@ export default function BarbersScreen() {
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={styles.listContainer}
           data={servicesQuery.data ?? []}
-          estimatedItemSize={152}
+
           keyExtractor={(item) => item.id}
           renderItem={renderServiceItem}
         />
@@ -690,7 +690,7 @@ export default function BarbersScreen() {
         onRequestClose={() => setBarberModalVisible(false)}
       >
         <View style={styles.modalRoot}>
-          <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+          <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
             {editingBarberId == null
               ? t('shopOwner.managementHub.createBarberTitle')
               : t('shopOwner.managementHub.editBarberTitle')}
@@ -750,7 +750,7 @@ export default function BarbersScreen() {
         onRequestClose={() => setServiceModalVisible(false)}
       >
         <View style={styles.modalRoot}>
-          <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+          <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
             {editingServiceId == null
               ? t('shopOwner.managementHub.createServiceTitle')
               : t('shopOwner.managementHub.editServiceTitle')}
@@ -825,7 +825,7 @@ export default function BarbersScreen() {
         onRequestClose={() => setAssignmentModalVisible(false)}
       >
         <View style={styles.modalRoot}>
-          <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+          <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
             {t('shopOwner.managementHub.assignServicesTitle')}
           </Text>
           {assignmentBarberName != null ? (
@@ -838,7 +838,7 @@ export default function BarbersScreen() {
             contentInsetAdjustmentBehavior="automatic"
             contentContainerStyle={styles.assignmentListContent}
             data={(servicesQuery.data ?? []).filter((service) => service.is_active)}
-            estimatedItemSize={72}
+
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => {
               const isSelected = selectedServiceIds.includes(item.id);

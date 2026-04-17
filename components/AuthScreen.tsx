@@ -19,7 +19,7 @@ export function AuthScreen({ children, description, footer, title }: AuthScreenP
           <Text color="$accent" fontWeight="700" textAlign="center">
             BarberQ
           </Text>
-          <Text fontFamily="$heading" fontSize={32} fontWeight="800" textAlign="center">
+          <Text fontFamily="$heading" fontSize={32} fontWeight="800" lineHeight={38} textAlign="center">
             {title}
           </Text>
           <Text color="$colorMuted" textAlign="center">

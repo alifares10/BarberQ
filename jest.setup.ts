@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import '@testing-library/jest-native/extend-expect';
+import '@testing-library/react-native/build/matchers/extend-expect';
 
 jest.mock('react-native-gesture-handler', () => {
   const { View } = jest.requireActual('react-native');
@@ -10,7 +10,22 @@ jest.mock('react-native-gesture-handler', () => {
   };
 });
 
-jest.mock('react-native-reanimated', () => jest.requireActual('react-native-reanimated/mock'));
+jest.mock('react-native-reanimated', () => {
+  const View = jest.requireActual('react-native').View;
+  return {
+    __esModule: true,
+    default: { createAnimatedComponent: (component: unknown) => component, View },
+    useSharedValue: (initialValue: unknown) => ({ value: initialValue }),
+    useAnimatedStyle: (fn: () => unknown) => fn(),
+    withTiming: (value: unknown) => value,
+    withSpring: (value: unknown) => value,
+    withSequence: (...values: unknown[]) => values[values.length - 1],
+    withDelay: (_: unknown, value: unknown) => value,
+    Easing: { linear: jest.fn(), ease: jest.fn(), bezier: jest.fn() },
+    runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
+    createAnimatedComponent: (component: unknown) => component,
+  };
+});
 
 jest.mock('expo-router', () => ({
   Redirect: () => null,

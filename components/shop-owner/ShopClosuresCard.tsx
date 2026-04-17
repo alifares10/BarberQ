@@ -181,7 +181,7 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
 
       <Modal animationType="slide" presentationStyle="formSheet" visible={isModalVisible} onRequestClose={handleClose}>
         <View style={styles.modalRoot}>
-          <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+          <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
             {t('shopOwner.shopClosures.title')}
           </Text>
           <Text color="$colorMuted">{t('shopOwner.shopClosures.description')}</Text>
@@ -251,7 +251,7 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
               }
               contentContainerStyle={styles.listContent}
               data={closures}
-              estimatedItemSize={124}
+
               keyExtractor={(item) => item.id}
               renderItem={renderClosureItem}
               style={styles.listViewport}

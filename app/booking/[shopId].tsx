@@ -198,7 +198,7 @@ export default function ShopDetailScreen() {
                 )}
               </View>
 
-              <Text fontFamily="$heading" fontSize={30} fontWeight="800">
+              <Text fontFamily="$heading" fontSize={30} fontWeight="800" lineHeight={36}>
                 {shop.name}
               </Text>
               <Text color="$colorMuted">{shop.description != null && shop.description.trim().length > 0 ? shop.description : t('customer.shopDetail.description')}</Text>
@@ -227,7 +227,7 @@ export default function ShopDetailScreen() {
         contentContainerStyle={styles.listContent}
         contentInsetAdjustmentBehavior="automatic"
         data={barbers}
-        estimatedItemSize={116}
+
         keyExtractor={(item) => item.id}
         renderItem={renderBarber}
       />

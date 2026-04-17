@@ -422,7 +422,7 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
           ) : isLoadingAvailabilityData ? (
             <>
               <Card>
-                <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+                <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
                   {t('shopOwner.availability.title')}
                 </Text>
                 <Text color="$colorMuted">{t('shopOwner.availability.subtitle', { name: barber.name })}</Text>
@@ -439,7 +439,7 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
           ) : hasAvailabilityLoadError ? (
             <>
               <Card>
-                <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+                <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
                   {t('shopOwner.availability.title')}
                 </Text>
                 <Text color="$colorMuted">{t('shopOwner.availability.subtitle', { name: barber.name })}</Text>
@@ -459,7 +459,7 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
           ) : (
             <>
               <Card>
-                <Text fontFamily="$heading" fontSize={24} fontWeight="800">
+                <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
                   {t('shopOwner.availability.title')}
                 </Text>
                 <Text color="$colorMuted">{t('shopOwner.availability.subtitle', { name: barber.name })}</Text>
@@ -540,7 +540,7 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
                   }
                   contentContainerStyle={styles.listContent}
                   data={barberWorkingHours}
-                  estimatedItemSize={136}
+
                   keyExtractor={(item) => item.id}
                   nestedScrollEnabled
                   renderItem={renderWorkingHour}
@@ -601,7 +601,7 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
                   }
                   contentContainerStyle={styles.listContent}
                   data={barberUnavailableDates}
-                  estimatedItemSize={120}
+
                   keyExtractor={(item) => item.id}
                   nestedScrollEnabled
                   renderItem={renderUnavailableDate}

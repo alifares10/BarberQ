@@ -139,7 +139,7 @@ export default function ServicesScreen() {
         }
         ListHeaderComponent={
           <Card>
-            <Text fontFamily="$heading" fontSize={28} fontWeight="800">
+            <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
               {t('customer.serviceSelection.title')}
             </Text>
             <Text color="$colorMuted">{t('customer.serviceSelection.description')}</Text>
@@ -148,7 +148,7 @@ export default function ServicesScreen() {
         contentContainerStyle={styles.listContent}
         contentInsetAdjustmentBehavior="automatic"
         data={rows}
-        estimatedItemSize={104}
+
         keyExtractor={(item) => item.id}
         renderItem={renderService}
       />

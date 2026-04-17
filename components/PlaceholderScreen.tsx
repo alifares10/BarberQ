@@ -26,7 +26,7 @@ export function PlaceholderScreen({ actions, description, title }: PlaceholderSc
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ flexGrow: 1 }}>
       <YStack backgroundColor="$background" flex={1} gap="$5" justifyContent="center" padding="$5">
         <Card>
-          <Text fontFamily="$heading" fontSize={30} fontWeight="800">
+          <Text fontFamily="$heading" fontSize={30} fontWeight="800" lineHeight={36}>
             {title}
           </Text>
           <Text color="$colorMuted">{description}</Text>

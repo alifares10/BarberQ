@@ -15,7 +15,7 @@ export function LoadingScreen({
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
       <View style={styles.container}>
         <ActivityIndicator size="large" />
-        <Text fontFamily="$heading" fontSize={28} fontWeight="800" textAlign="center">
+        <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign="center">
           {title}
         </Text>
         <Text color="$colorMuted" textAlign="center">
