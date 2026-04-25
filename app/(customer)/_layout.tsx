@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next';
 
 import { LoadingScreen } from '@/components';
 import { getOnboardingRoute } from '@/lib/auth/routing';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function CustomerTabsLayout() {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const pendingRole = useAuthStore((state) => state.pendingRole);
   const profile = useAuthStore((state) => state.profile);
@@ -29,7 +31,17 @@ export default function CustomerTabsLayout() {
   }
 
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.colorMuted,
+        tabBarStyle: {
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.border,
+        },
+      }}
+    >
       <Tabs.Screen name="index" options={{ title: t('tabs.explore') }} />
       <Tabs.Screen name="bookings" options={{ title: t('tabs.bookings') }} />
       <Tabs.Screen name="favorites" options={{ title: t('tabs.favorites') }} />

@@ -11,6 +11,7 @@ import { Card, LoadingScreen, StateCard, Text } from '@/components';
 import { fetchActiveBarbersByShopId, fetchShopById } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 import { useBookingStore } from '@/stores/booking-store';
 import type { Database } from '@/types/database';
 
@@ -29,6 +30,7 @@ type BarberRowProps = {
 const BarberRow = memo(function BarberRow({ avatarUrl, barberId, bio, name, onSelect }: BarberRowProps) {
   const { i18n, t } = useTranslation();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
 
   return (
     <Pressable onPress={() => onSelect(barberId)}>
@@ -43,7 +45,7 @@ const BarberRow = memo(function BarberRow({ avatarUrl, barberId, bio, name, onSe
               transition={120}
             />
           ) : (
-            <View style={styles.avatarFallback}>
+            <View style={[styles.avatarFallback, { backgroundColor: colors.surfaceMuted }]}>
               <Text color="$colorMuted">{name.slice(0, 1).toUpperCase()}</Text>
             </View>
           )}
@@ -61,6 +63,7 @@ const BarberRow = memo(function BarberRow({ avatarUrl, barberId, bio, name, onSe
 export default function ShopDetailScreen() {
   const { i18n, t } = useTranslation();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const router = useRouter();
   const setNotes = useBookingStore((state) => state.setNotes);
   const setSelectedBarberId = useBookingStore((state) => state.setSelectedBarberId);
@@ -136,7 +139,7 @@ export default function ShopDetailScreen() {
 
   if (shopId.length === 0) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard description={t('customer.shopDetail.invalidShop')} variant="error" />
       </View>
     );
@@ -148,7 +151,7 @@ export default function ShopDetailScreen() {
 
   if (shopQuery.isError || barbersQuery.isError) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('customer.shopDetail.retryButton')}
           description={t('customer.shopDetail.loadError')}
@@ -164,14 +167,14 @@ export default function ShopDetailScreen() {
 
   if (shop == null) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard description={t('customer.shopDetail.invalidShop')} variant="error" />
       </View>
     );
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlashList
         ListEmptyComponent={
           <StateCard description={t('customer.shopDetail.emptyBarbers')} variant="empty" />
@@ -189,7 +192,7 @@ export default function ShopDetailScreen() {
                     transition={140}
                   />
                 ) : (
-                  <View style={styles.coverFallback}>
+                  <View style={[styles.coverFallback, { backgroundColor: colors.surfaceMuted }]}>
                     <Text color="$colorMuted">BarberQ</Text>
                   </View>
                 )}
@@ -199,18 +202,18 @@ export default function ShopDetailScreen() {
                 {shop.name}
               </Text>
               <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{shop.description != null && shop.description.trim().length > 0 ? shop.description : t('customer.shopDetail.description')}</Text>
-              <Pressable onPress={handleOpenAddress} style={styles.detailPill}>
+              <Pressable onPress={handleOpenAddress} style={[styles.detailPill, { backgroundColor: colors.surfaceMuted }]}>
                 <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{shop.address}</Text>
               </Pressable>
-              <Pressable onPress={handleCallShop} style={styles.detailPill}>
+              <Pressable onPress={handleCallShop} style={[styles.detailPill, { backgroundColor: colors.surfaceMuted }]}>
                 <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{shop.phone}</Text>
               </Pressable>
 
               <View style={[styles.actionsRow, { flexDirection: rtlLayout.rowDirection }]}>
-                <Pressable onPress={handleOpenAddress} style={styles.actionChip}>
+                <Pressable onPress={handleOpenAddress} style={[styles.actionChip, { backgroundColor: colors.primary }]}>
                   <Text color="$inverseColor" textAlign="center">{t('customer.shopDetail.openInMapsButton')}</Text>
                 </Pressable>
-                <Pressable onPress={handleCallShop} style={styles.actionChipSecondary}>
+                <Pressable onPress={handleCallShop} style={[styles.actionChipSecondary, { backgroundColor: colors.chip }]}>
                   <Text color="$colorMuted" textAlign="center">{t('customer.shopDetail.callShopButton')}</Text>
                 </Pressable>
               </View>
@@ -234,14 +237,12 @@ export default function ShopDetailScreen() {
 
 const styles = StyleSheet.create({
   actionChip: {
-    backgroundColor: '#0f172a',
     borderCurve: 'continuous',
     borderRadius: 999,
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
   actionChipSecondary: {
-    backgroundColor: '#e2e8f0',
     borderCurve: 'continuous',
     borderRadius: 999,
     paddingHorizontal: 14,
@@ -253,7 +254,6 @@ const styles = StyleSheet.create({
   },
   avatarFallback: {
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
     borderCurve: 'continuous',
     borderRadius: 20,
     height: 56,
@@ -279,7 +279,6 @@ const styles = StyleSheet.create({
   },
   coverFallback: {
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
     flex: 1,
     justifyContent: 'center',
   },
@@ -288,7 +287,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   detailPill: {
-    backgroundColor: '#f8fafc',
     borderCurve: 'continuous',
     borderRadius: 14,
     paddingHorizontal: 12,

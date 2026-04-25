@@ -8,6 +8,7 @@ import { Text } from '@/components/Text/Text';
 import { appConfig, type AppLanguage } from '@/constants/config';
 import { changeAppLanguage } from '@/lib/i18n';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 
 const LANGUAGE_OPTIONS: { labelKey: string; value: AppLanguage }[] = [
   { labelKey: 'common.languageEnglish', value: 'en' },
@@ -28,6 +29,7 @@ export function LanguageSettingsCard() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
 
   async function handleLanguagePress(language: AppLanguage) {
     if (language === selectedLanguage || isSaving) {
@@ -73,7 +75,13 @@ export function LanguageSettingsCard() {
               disabled={isSaving}
               key={option.value}
               onPress={() => void handleLanguagePress(option.value)}
-              style={[styles.option, isSelected ? styles.optionSelected : null]}
+              style={[
+                styles.option,
+                {
+                  backgroundColor: isSelected ? colors.primary : colors.surfaceMuted,
+                  borderColor: isSelected ? colors.primary : colors.chipBorder,
+                },
+              ]}
             >
               <Text color={isSelected ? '$inverseColor' : '$color'} fontWeight="700" textAlign="center">
                 {t(option.labelKey)}
@@ -87,7 +95,7 @@ export function LanguageSettingsCard() {
       </View>
 
       {notice != null ? (
-        <View style={styles.notice}>
+        <View style={[styles.notice, { backgroundColor: colors.warningSurface }]}>
           <Text color="$color" fontSize={13} textAlign={rtlLayout.textAlign}>
             {notice}
           </Text>
@@ -101,15 +109,12 @@ export function LanguageSettingsCard() {
 
 const styles = StyleSheet.create({
   notice: {
-    backgroundColor: '#FEF3C7',
     borderCurve: 'continuous',
     borderRadius: 12,
     padding: 12,
   },
   option: {
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderColor: '#CBD5E1',
     borderCurve: 'continuous',
     borderRadius: 14,
     borderWidth: 1,
@@ -119,10 +124,6 @@ const styles = StyleSheet.create({
     minHeight: 64,
     paddingHorizontal: 12,
     paddingVertical: 10,
-  },
-  optionSelected: {
-    backgroundColor: '#111827',
-    borderColor: '#111827',
   },
   optionsRow: {
     gap: 8,

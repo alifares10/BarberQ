@@ -11,6 +11,7 @@ import { calculateDistanceKm, formatDistance } from '@/lib/customer/distance';
 import { fetchActiveShops, type CustomerShop } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 
 const TEL_AVIV_COORDINATES = {
   latitude: 32.0853,
@@ -64,6 +65,7 @@ const ShopListItem = memo(function ShopListItem({
 export default function ExploreScreen() {
   const { i18n, t } = useTranslation();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceFilter, setSelectedServiceFilter] = useState<string | null>(null);
@@ -222,7 +224,7 @@ export default function ExploreScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <View style={styles.mapContainer}>
         <ExploreMap
           center={mapCenter}
@@ -239,7 +241,7 @@ export default function ExploreScreen() {
 
       <View style={styles.controls}>
         {locationState === 'denied' ? (
-          <Card style={styles.locationBanner}>
+          <Card style={{ backgroundColor: colors.surfaceMuted }}>
             <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.explore.locationDenied')}</Text>
           </Card>
         ) : null}
@@ -249,7 +251,10 @@ export default function ExploreScreen() {
         <View style={[styles.chipsRow, { flexDirection: rtlLayout.rowDirection }]}>
           <Pressable
             onPress={() => setSelectedServiceFilter(null)}
-            style={selectedServiceFilter == null ? styles.chipActive : styles.chip}
+            style={[
+              styles.chip,
+              { backgroundColor: selectedServiceFilter == null ? colors.primary : colors.chip },
+            ]}
           >
             <Text color={selectedServiceFilter == null ? '$inverseColor' : '$colorMuted'} textAlign="center">
               {t('customer.explore.allServices')}
@@ -263,7 +268,7 @@ export default function ExploreScreen() {
               <Pressable
                 key={option.id}
                 onPress={() => setSelectedServiceFilter(option.id)}
-                style={isSelected ? styles.chipActive : styles.chip}
+                style={[styles.chip, { backgroundColor: isSelected ? colors.primary : colors.chip }]}
               >
                 <Text color={isSelected ? '$inverseColor' : '$colorMuted'} textAlign="center">{option.name}</Text>
               </Pressable>
@@ -273,7 +278,7 @@ export default function ExploreScreen() {
       </View>
 
       {shopsQuery.isError ? (
-        <View style={styles.errorContainer}>
+        <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
           <StateCard
             actionLabel={t('customer.explore.retryButton')}
             description={t('customer.explore.loadError')}
@@ -300,14 +305,6 @@ export default function ExploreScreen() {
 
 const styles = StyleSheet.create({
   chip: {
-    backgroundColor: '#e2e8f0',
-    borderCurve: 'continuous',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  chipActive: {
-    backgroundColor: '#0f172a',
     borderCurve: 'continuous',
     borderRadius: 999,
     paddingHorizontal: 12,
@@ -332,9 +329,6 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 8,
     paddingBottom: 24,
-  },
-  locationBanner: {
-    backgroundColor: '#f8fafc',
   },
   mapContainer: {
     borderCurve: 'continuous',

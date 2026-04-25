@@ -9,6 +9,7 @@ import { Button, ButtonText, Card, LoadingScreen, ServiceItem, StateCard, Text }
 import { fetchServicesByBarberId } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 import { useBookingStore } from '@/stores/booking-store';
 
 type ServiceRow = {
@@ -22,6 +23,7 @@ type ServiceRow = {
 export default function ServicesScreen() {
   const { i18n, t } = useTranslation();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const router = useRouter();
   const selectedBarberId = useBookingStore((state) => state.selectedBarberId);
   const selectedServiceIdsInStore = useBookingStore((state) => state.selectedServiceIds);
@@ -103,7 +105,7 @@ export default function ServicesScreen() {
 
   if (selectedBarberId == null) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('customer.serviceSelection.backToExplore')}
           description={t('customer.serviceSelection.missingBarber')}
@@ -120,7 +122,7 @@ export default function ServicesScreen() {
 
   if (servicesQuery.isError) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('customer.serviceSelection.retryButton')}
           description={t('customer.serviceSelection.loadError')}
@@ -132,7 +134,7 @@ export default function ServicesScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlashList
         ListEmptyComponent={
           <StateCard description={t('customer.serviceSelection.empty')} variant="empty" />
@@ -153,7 +155,7 @@ export default function ServicesScreen() {
         renderItem={renderService}
       />
 
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <Card>
           <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
             {t('customer.serviceSelection.selectedCount', {
@@ -182,8 +184,6 @@ export default function ServicesScreen() {
 
 const styles = StyleSheet.create({
   bottomBar: {
-    backgroundColor: '#ffffff',
-    borderTopColor: '#e2e8f0',
     borderTopWidth: 1,
     padding: 16,
     paddingTop: 10,

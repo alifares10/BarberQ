@@ -25,6 +25,7 @@ import {
   type RangeMode,
 } from '@/lib/shop-owner/appointments-helpers';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
 
 type CalendarRow =
@@ -86,6 +87,7 @@ export default function CalendarScreen() {
   const { i18n, t } = useTranslation();
   const { showToast } = useToast();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const queryClient = useQueryClient();
   const router = useRouter();
   const session = useAuthStore((state) => state.session);
@@ -298,7 +300,7 @@ export default function CalendarScreen() {
   const pendingStatusUpdate = statusMutation.isPending ? (statusMutation.variables?.status ?? null) : null;
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlashList
         ListEmptyComponent={
           shopId != null && !appointmentsQuery.isError ? (
@@ -341,13 +343,25 @@ export default function CalendarScreen() {
                 <View style={[styles.modeRow, { flexDirection: rtlLayout.rowDirection }]}>
                   <Pressable
                     onPress={() => setMode('week')}
-                    style={[styles.modePill, mode === 'week' ? styles.modePillActive : null]}
+                    style={[
+                      styles.modePill,
+                      {
+                        backgroundColor: mode === 'week' ? colors.primary : colors.surfaceMuted,
+                        borderColor: mode === 'week' ? colors.primary : colors.chipBorder,
+                      },
+                    ]}
                   >
                     <Text color={mode === 'week' ? '$inverseColor' : '$colorMuted'} textAlign="center">{t('shopOwner.calendar.weekMode')}</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => setMode('month')}
-                    style={[styles.modePill, mode === 'month' ? styles.modePillActive : null]}
+                    style={[
+                      styles.modePill,
+                      {
+                        backgroundColor: mode === 'month' ? colors.primary : colors.surfaceMuted,
+                        borderColor: mode === 'month' ? colors.primary : colors.chipBorder,
+                      },
+                    ]}
                   >
                     <Text color={mode === 'month' ? '$inverseColor' : '$colorMuted'} textAlign="center">{t('shopOwner.calendar.monthMode')}</Text>
                   </Pressable>
@@ -379,7 +393,7 @@ export default function CalendarScreen() {
         presentationStyle="formSheet"
         visible={selectedAppointment != null}
       >
-        <View style={styles.modalScreen}>
+        <View style={[styles.modalScreen, { backgroundColor: colors.background }]}>
           <Card>
             <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
               {t('shopOwner.calendar.appointmentDetailsTitle')}
@@ -466,18 +480,12 @@ const styles = StyleSheet.create({
   },
   modePill: {
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
     borderCurve: 'continuous',
     borderRadius: 999,
     borderWidth: 1,
     minWidth: 84,
     paddingHorizontal: 12,
     paddingVertical: 8,
-  },
-  modePillActive: {
-    backgroundColor: '#0f172a',
-    borderColor: '#0f172a',
   },
   modeRow: {
     flexWrap: 'wrap',

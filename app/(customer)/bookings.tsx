@@ -9,6 +9,7 @@ import { cancelAppointment, fetchCustomerAppointments, type CustomerAppointment 
 import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { notifyBookingCancelled } from '@/lib/push/notify-booking';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 import { normalizeTime, parseIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -45,6 +46,7 @@ export default function CustomerBookingsScreen() {
   const { i18n, t } = useTranslation();
   const { showToast } = useToast();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const queryClient = useQueryClient();
   const session = useAuthStore((state) => state.session);
   const customerId = session?.user.id ?? null;
@@ -269,7 +271,7 @@ export default function CustomerBookingsScreen() {
 
   if (customerId == null) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard description={t('customer.bookings.missingSession')} variant="error" />
       </View>
     );
@@ -281,7 +283,7 @@ export default function CustomerBookingsScreen() {
 
   if (appointmentsQuery.isError) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('customer.bookings.retryButton')}
           description={t('customer.bookings.loadError')}
@@ -293,7 +295,7 @@ export default function CustomerBookingsScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlashList
         ListEmptyComponent={
           <StateCard description={t('customer.bookings.empty')} variant="empty" />

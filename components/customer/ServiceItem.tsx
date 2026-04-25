@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/Card/Card';
 import { Text } from '@/components/Text/Text';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 
 type ServiceItemProps = {
   duration: number;
@@ -27,6 +28,7 @@ export const ServiceItem = memo(function ServiceItem({
 }: ServiceItemProps) {
   const { i18n, t } = useTranslation();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const isPressed = useSharedValue(0);
   const pressGesture = Gesture.Tap()
     .onBegin(() => {
@@ -48,7 +50,19 @@ export const ServiceItem = memo(function ServiceItem({
     <GestureDetector gesture={pressGesture}>
       <Animated.View style={animatedStyle}>
         <Pressable onPress={() => onToggle(serviceId)}>
-          <Card style={isSelected ? styles.selectedCard : styles.card}>
+          <Card
+            style={[
+              styles.card,
+              isSelected
+                ? {
+                    backgroundColor: colors.accentMuted,
+                    borderColor: colors.accent,
+                    borderWidth: 1,
+                    boxShadow: `0px 6px 18px ${colors.toastShadow}`,
+                  }
+                : null,
+            ]}
+          >
             <View style={[styles.row, { flexDirection: rtlLayout.rowDirection }]}>
               <View style={[styles.column, { alignItems: rtlLayout.leadingAlignItems }]}>
                 <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{name}</Text>
@@ -92,13 +106,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 12,
-  },
-  selectedCard: {
-    backgroundColor: '#eef2ff',
-    borderColor: '#6366f1',
-    borderCurve: 'continuous',
-    borderRadius: 18,
-    borderWidth: 1,
-    boxShadow: '0px 6px 18px rgba(79, 70, 229, 0.15)',
   },
 });

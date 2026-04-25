@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, ButtonText } from '@/components/Button/Button';
 import { Card } from '@/components/Card/Card';
 import { Text } from '@/components/Text/Text';
+import { useAppTheme } from '@/lib/theme';
 
 type PlaceholderAction = {
   href: Href;
@@ -20,9 +21,14 @@ type PlaceholderScreenProps = {
 export function PlaceholderScreen({ actions, description, title }: PlaceholderScreenProps) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.contentContainer}
+      style={{ backgroundColor: colors.background }}
+    >
       <View style={styles.container}>
         <Card>
           <Text fontFamily="$heading" fontSize={30} fontWeight="800" lineHeight={36}>

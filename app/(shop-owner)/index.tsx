@@ -10,6 +10,7 @@ import { getRtlLayout } from '@/lib/rtl';
 import { fetchShopAppointmentsByDateRange, fetchShopByOwnerId, type ShopAppointment } from '@/lib/shop-owner/api';
 import { getDashboardStats, normalizeTime, toIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
 
 type AppointmentItemProps = {
@@ -44,6 +45,7 @@ const AppointmentItem = memo(function AppointmentItem({
 export default function DashboardScreen() {
   const { i18n, t } = useTranslation();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const router = useRouter();
   const session = useAuthStore((state) => state.session);
   const ownerId = session?.user.id ?? null;
@@ -116,7 +118,7 @@ export default function DashboardScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlashList
         ListEmptyComponent={
           shopId != null && !appointmentsQuery.isError ? (
@@ -155,21 +157,27 @@ export default function DashboardScreen() {
               <>
                 <View style={[styles.statsRow, { flexDirection: rtlLayout.rowDirection }]}>
                   <Card style={styles.statCard}>
-                    <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.stats.total')}</Text>
+                    <Text fontSize={14} fontWeight="700" lineHeight={20} textAlign={rtlLayout.textAlign}>
+                      {t('shopOwner.dashboard.stats.total')}
+                    </Text>
                     <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
                       {stats.total}
                     </Text>
                   </Card>
 
                   <Card style={styles.statCard}>
-                    <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.stats.upcoming')}</Text>
+                    <Text fontSize={14} fontWeight="700" lineHeight={20} textAlign={rtlLayout.textAlign}>
+                      {t('shopOwner.dashboard.stats.upcoming')}
+                    </Text>
                     <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
                       {stats.upcoming}
                     </Text>
                   </Card>
 
                   <Card style={styles.statCard}>
-                    <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.stats.cancelled')}</Text>
+                    <Text fontSize={14} fontWeight="700" lineHeight={20} textAlign={rtlLayout.textAlign}>
+                      {t('shopOwner.dashboard.stats.cancelled')}
+                    </Text>
                     <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
                       {stats.cancelled}
                     </Text>
@@ -209,7 +217,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    minWidth: 96,
+    minWidth: 112,
   },
   statsRow: {
     flexWrap: 'wrap',

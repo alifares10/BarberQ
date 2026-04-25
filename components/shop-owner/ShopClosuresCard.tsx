@@ -17,6 +17,7 @@ import {
 } from '@/lib/shop-owner/api';
 import { getRtlLayout } from '@/lib/rtl';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
+import { useAppTheme } from '@/lib/theme';
 import type { Database } from '@/types/database';
 
 type ShopClosure = Database['public']['Tables']['shop_closures']['Row'];
@@ -40,6 +41,7 @@ function isValidDateInput(value: string) {
 export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
   const { i18n, t } = useTranslation();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const queryClient = useQueryClient();
   const [isModalVisible, setModalVisible] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
@@ -184,7 +186,7 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
       </Card>
 
       <Modal animationType="slide" presentationStyle="formSheet" visible={isModalVisible} onRequestClose={handleClose}>
-        <View style={styles.modalRoot}>
+        <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
           <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
             {t('shopOwner.shopClosures.title')}
           </Text>

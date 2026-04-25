@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/Text/Text';
+import { useAppTheme } from '@/lib/theme';
 
 type DateChipProps = {
   date: string;
@@ -20,11 +21,17 @@ export const DateChip = memo(function DateChip({
   isSelected,
   onSelect,
 }: DateChipProps) {
+  const { colors } = useAppTheme();
+
   return (
     <Pressable
       disabled={isDisabled}
       onPress={() => onSelect(date)}
-      style={isSelected ? styles.chipSelected : styles.chip}
+      style={[
+        styles.chip,
+        { backgroundColor: isSelected ? colors.primary : colors.chip },
+        isDisabled ? styles.disabled : null,
+      ]}
     >
       <View style={styles.content}>
         <Text color={isSelected ? '$inverseColor' : '$colorMuted'}>{dayLabel}</Text>
@@ -38,20 +45,9 @@ export const DateChip = memo(function DateChip({
 
 const styles = StyleSheet.create({
   chip: {
-    backgroundColor: '#e2e8f0',
     borderCurve: 'continuous',
     borderRadius: 14,
     minWidth: 86,
-    opacity: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  chipSelected: {
-    backgroundColor: '#0f172a',
-    borderCurve: 'continuous',
-    borderRadius: 14,
-    minWidth: 86,
-    opacity: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
@@ -59,5 +55,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
     justifyContent: 'center',
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

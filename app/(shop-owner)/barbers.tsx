@@ -21,6 +21,7 @@ import {
   uploadBarberAvatarImage,
 } from '@/lib/shop-owner/api';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Database } from '@/types/database';
 
@@ -84,6 +85,7 @@ const BarberItem = memo(function BarberItem({
   onToggleActive,
 }: BarberItemProps) {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
 
   return (
     <Card>
@@ -91,7 +93,7 @@ const BarberItem = memo(function BarberItem({
         {avatarUrl != null ? (
           <Image contentFit="cover" source={{ uri: avatarUrl }} style={styles.avatarImage} />
         ) : (
-          <View style={styles.avatarPlaceholder}>
+          <View style={[styles.avatarPlaceholder, { backgroundColor: colors.surfaceMuted, borderColor: colors.chipBorder }]}>
             <Text color="$colorMuted">{name.slice(0, 1).toUpperCase()}</Text>
           </View>
         )}
@@ -176,6 +178,7 @@ const ServiceItem = memo(function ServiceItem({
 
 export default function BarbersScreen() {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
   const session = useAuthStore((state) => state.session);
@@ -598,7 +601,7 @@ export default function BarbersScreen() {
 
   if (shopQuery.data == null) {
     return (
-      <View style={styles.screen}>
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('shopOwner.managementHub.goToShopButton')}
           description={t('shopOwner.managementHub.missingShopDescription')}
@@ -612,7 +615,7 @@ export default function BarbersScreen() {
 
   if (hasHubQueryError) {
     return (
-      <View style={styles.screen}>
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('shopOwner.managementHub.retryButton')}
           description={t('shopOwner.managementHub.loadError')}
@@ -624,7 +627,7 @@ export default function BarbersScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <Card>
         <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
           {t('shopOwner.managementHub.title')}
@@ -683,7 +686,7 @@ export default function BarbersScreen() {
         visible={isBarberModalVisible}
         onRequestClose={() => setBarberModalVisible(false)}
       >
-        <View style={styles.modalRoot}>
+        <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
           <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
             {editingBarberId == null
               ? t('shopOwner.managementHub.createBarberTitle')
@@ -743,7 +746,7 @@ export default function BarbersScreen() {
         visible={isServiceModalVisible}
         onRequestClose={() => setServiceModalVisible(false)}
       >
-        <View style={styles.modalRoot}>
+        <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
           <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
             {editingServiceId == null
               ? t('shopOwner.managementHub.createServiceTitle')
@@ -818,7 +821,7 @@ export default function BarbersScreen() {
         visible={isAssignmentModalVisible}
         onRequestClose={() => setAssignmentModalVisible(false)}
       >
-        <View style={styles.modalRoot}>
+        <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
           <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
             {t('shopOwner.managementHub.assignServicesTitle')}
           </Text>
@@ -840,7 +843,14 @@ export default function BarbersScreen() {
               return (
                 <Pressable
                   onPress={() => toggleServiceSelection(item.id)}
-                  style={[styles.assignmentItem, isSelected ? styles.assignmentItemSelected : null]}
+                  style={[
+                    styles.assignmentItem,
+                    {
+                      backgroundColor: isSelected ? colors.accentMuted : colors.card,
+                      borderColor: isSelected ? colors.accent : colors.border,
+                      borderWidth: isSelected ? 2 : 1,
+                    },
+                  ]}
                 >
                   <Text fontWeight="700">{item.name}</Text>
                   <Text color="$colorMuted">
@@ -886,16 +896,11 @@ export default function BarbersScreen() {
 
 const styles = StyleSheet.create({
   assignmentItem: {
-    borderColor: '#e2e8f0',
     borderCurve: 'continuous',
     borderRadius: 16,
     borderWidth: 1,
     gap: 4,
     padding: 12,
-  },
-  assignmentItemSelected: {
-    borderColor: '#6366f1',
-    borderWidth: 2,
   },
   assignmentListContent: {
     gap: 8,
@@ -909,8 +914,6 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholder: {
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
-    borderColor: '#cbd5e1',
     borderCurve: 'continuous',
     borderRadius: 28,
     borderWidth: 1,

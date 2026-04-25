@@ -5,12 +5,14 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, ButtonText, Card, LanguageSettingsCard, Text, useToast } from '@/components';
 import { signOut } from '@/lib/auth/sign-out';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function CustomerProfileScreen() {
   const { i18n, t } = useTranslation();
   const { showToast } = useToast();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const profile = useAuthStore((state) => state.profile);
   const signOutMutation = useMutation({
     mutationFn: signOut,
@@ -24,7 +26,11 @@ export default function CustomerProfileScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.contentContainer} contentInsetAdjustmentBehavior="automatic">
+    <ScrollView
+      contentContainerStyle={styles.contentContainer}
+      contentInsetAdjustmentBehavior="automatic"
+      style={{ backgroundColor: colors.background }}
+    >
       <Card>
         <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
           {t('customer.profileTitle')}

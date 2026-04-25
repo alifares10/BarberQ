@@ -20,6 +20,7 @@ import {
   updateWorkingHour,
 } from '@/lib/shop-owner/api';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
+import { useAppTheme } from '@/lib/theme';
 import type { Database } from '@/types/database';
 
 type Barber = Database['public']['Tables']['barbers']['Row'];
@@ -80,6 +81,7 @@ function toMinutes(timeValue: string) {
 
 export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: BarberAvailabilityModalProps) {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const queryClient = useQueryClient();
   const [workingHourId, setWorkingHourId] = useState<string | null>(null);
   const [workingDay, setWorkingDay] = useState<number>(DEFAULT_WORKING_DAY);
@@ -411,8 +413,12 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
 
   return (
     <Modal animationType="slide" presentationStyle="formSheet" visible={visible} onRequestClose={handleClose}>
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.modalContentContainer}>
-        <View style={styles.modalRoot}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.modalContentContainer}
+        style={{ backgroundColor: colors.background }}
+      >
+        <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
           {barber == null ? (
             <StateCard
               actionLabel={t('shopOwner.availability.actions.close')}
@@ -471,7 +477,13 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
                     <Pressable
                       key={day}
                       onPress={() => syncWorkingDraftForDay(day)}
-                      style={[styles.dayPill, workingDay === day ? styles.dayPillSelected : null]}
+                      style={[
+                        styles.dayPill,
+                        {
+                          backgroundColor: workingDay === day ? colors.primary : colors.surfaceMuted,
+                          borderColor: workingDay === day ? colors.primary : colors.chipBorder,
+                        },
+                      ]}
                     >
                       <Text color={workingDay === day ? '$inverseColor' : '$colorMuted'}>
                         {t(`shopOwner.availability.days.${day}`)}
@@ -631,18 +643,12 @@ const styles = StyleSheet.create({
   },
   dayPill: {
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
     borderCurve: 'continuous',
     borderRadius: 999,
     borderWidth: 1,
     minWidth: 44,
     paddingHorizontal: 12,
     paddingVertical: 8,
-  },
-  dayPillSelected: {
-    backgroundColor: '#0f172a',
-    borderColor: '#0f172a',
   },
   dayRow: {
     flexDirection: 'row',

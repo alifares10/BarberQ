@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Card } from '@/components/Card/Card';
 import { Text } from '@/components/Text/Text';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 
 const DEFAULT_BLURHASH = 'L6Pj0^i_.AyE_3t7t7R**0o#DgR4';
 
@@ -19,6 +20,7 @@ type ShopCardProps = {
 
 export const ShopCard = memo(function ShopCard({ address, coverImageUrl, distance, name, onPress, shopId }: ShopCardProps) {
   const rtlLayout = getRtlLayout();
+  const { colors } = useAppTheme();
 
   return (
     <Pressable onPress={() => onPress(shopId)}>
@@ -33,7 +35,7 @@ export const ShopCard = memo(function ShopCard({ address, coverImageUrl, distanc
               transition={150}
             />
           ) : (
-            <View style={styles.coverFallback}>
+            <View style={[styles.coverFallback, { backgroundColor: colors.surfaceMuted }]}>
               <Text color="$colorMuted">BarberQ</Text>
             </View>
           )}
@@ -63,7 +65,6 @@ const styles = StyleSheet.create({
   },
   coverFallback: {
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
     flex: 1,
     justifyContent: 'center',
   },

@@ -10,6 +10,7 @@ import { getRtlLayout } from '@/lib/rtl';
 import { createShop, fetchShopByOwnerId, updateShop, uploadShopCoverImage } from '@/lib/shop-owner/api';
 import { geocodeAddress } from '@/lib/shop-owner/geocoding';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
 
 type ShopFormState = {
@@ -40,6 +41,7 @@ export default function ShopManagementScreen() {
   const { i18n, t } = useTranslation();
   const { showToast } = useToast();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const queryClient = useQueryClient();
   const session = useAuthStore((state) => state.session);
   const ownerId = session?.user.id ?? null;
@@ -225,7 +227,7 @@ export default function ShopManagementScreen() {
 
   if (shopQuery.isError && shopQuery.data == null) {
     return (
-      <View style={styles.errorScreen}>
+      <View style={[styles.errorScreen, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('shopOwner.shopManagement.retryButton')}
           description={t('shopOwner.shopManagement.loadError')}
@@ -241,7 +243,11 @@ export default function ShopManagementScreen() {
   const hasExistingShop = shopQuery.data != null;
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.contentContainer}
+      style={{ backgroundColor: colors.background }}
+    >
       <View style={styles.container}>
         <Card>
           <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
@@ -265,7 +271,7 @@ export default function ShopManagementScreen() {
             {currentCoverImage != null ? (
               <Image source={{ uri: currentCoverImage }} style={styles.coverImage} contentFit="cover" />
             ) : (
-              <View style={styles.coverPlaceholder}>
+              <View style={[styles.coverPlaceholder, { borderColor: colors.chipBorder }]}>
                 <Text color="$colorMuted" textAlign="center">{t('shopOwner.shopManagement.coverPlaceholder')}</Text>
               </View>
             )}
@@ -377,7 +383,6 @@ const styles = StyleSheet.create({
   },
   coverPlaceholder: {
     alignItems: 'center',
-    borderColor: '#cbd5e1',
     borderCurve: 'continuous',
     borderRadius: 16,
     borderStyle: 'dashed',

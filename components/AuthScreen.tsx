@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/Card/Card';
 import { Text } from '@/components/Text/Text';
+import { useAppTheme } from '@/lib/theme';
 
 type AuthScreenProps = {
   children: ReactNode;
@@ -12,8 +13,14 @@ type AuthScreenProps = {
 };
 
 export function AuthScreen({ children, description, footer, title }: AuthScreenProps) {
+  const { colors } = useAppTheme();
+
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.contentContainer}
+      style={{ backgroundColor: colors.background }}
+    >
       <View style={styles.container}>
         <View style={styles.hero}>
           <Text color="$accent" fontWeight="700" textAlign="center">

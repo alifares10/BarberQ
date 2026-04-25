@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next';
 
 import { LoadingScreen } from '@/components';
 import { getOnboardingRoute } from '@/lib/auth/routing';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
 
 export default function ShopOwnerTabsLayout() {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const pendingRole = useAuthStore((state) => state.pendingRole);
   const profile = useAuthStore((state) => state.profile);
@@ -29,7 +31,17 @@ export default function ShopOwnerTabsLayout() {
   }
 
   return (
-    <Tabs screenOptions={{ headerShown: false }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.colorMuted,
+        tabBarStyle: {
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.border,
+        },
+      }}
+    >
       <Tabs.Screen name="index" options={{ title: t('tabs.dashboard') }} />
       <Tabs.Screen name="calendar" options={{ title: t('tabs.calendar') }} />
       <Tabs.Screen name="shop" options={{ title: t('tabs.shop') }} />

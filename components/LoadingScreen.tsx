@@ -2,6 +2,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
 import i18n from '@/lib/i18n';
 import { Text } from '@/components/Text/Text';
+import { useAppTheme } from '@/lib/theme';
 
 type LoadingScreenProps = {
   description?: string;
@@ -12,6 +13,7 @@ export function LoadingScreen({
   description,
   title,
 }: LoadingScreenProps) {
+  const { colors } = useAppTheme();
   const resolvedTitle =
     title ?? (i18n.isInitialized ? i18n.t('common.loadingTitle') : 'Loading BarberQ');
   const resolvedDescription =
@@ -21,7 +23,11 @@ export function LoadingScreen({
       : 'Checking your session and preparing the app.');
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={styles.contentContainer}
+      style={{ backgroundColor: colors.background }}
+    >
       <View style={styles.container}>
         <ActivityIndicator size="large" />
         <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign="center">

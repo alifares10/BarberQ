@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Text } from '@/components/Text/Text';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 
 type ToastType = 'error' | 'info' | 'success';
 
@@ -28,6 +29,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
   const { i18n } = useTranslation();
   const insets = useSafeAreaInsets();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
 
@@ -68,9 +70,11 @@ export function ToastProvider({ children }: PropsWithChildren) {
               key={toast.id}
               style={[
                 styles.toast,
-                toast.type === 'success' ? styles.successToast : null,
-                toast.type === 'error' ? styles.errorToast : null,
-                toast.type === 'info' ? styles.infoToast : null,
+                {
+                  backgroundColor:
+                    toast.type === 'success' ? colors.success : toast.type === 'error' ? colors.danger : colors.info,
+                  boxShadow: `0px 10px 30px ${colors.toastShadow}`,
+                },
               ]}
             >
               <Text color="$inverseColor" fontWeight="700" textAlign={rtlLayout.textAlign}>
@@ -95,12 +99,6 @@ export function useToast() {
 }
 
 const styles = StyleSheet.create({
-  errorToast: {
-    backgroundColor: '#dc2626',
-  },
-  infoToast: {
-    backgroundColor: '#1d4ed8',
-  },
   overlay: {
     bottom: 0,
     left: 0,
@@ -112,13 +110,9 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  successToast: {
-    backgroundColor: '#15803d',
-  },
   toast: {
     borderCurve: 'continuous',
     borderRadius: 14,
-    boxShadow: '0px 10px 30px rgba(15, 23, 42, 0.24)',
     paddingHorizontal: 16,
     paddingVertical: 12,
   },

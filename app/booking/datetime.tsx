@@ -21,6 +21,7 @@ import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { generateAvailableSlots, minutesToTime, timeToMinutes } from '@/lib/customer/slot-helpers';
 import { notifyNewBooking } from '@/lib/push/notify-booking';
 import { getRtlLayout } from '@/lib/rtl';
+import { useAppTheme } from '@/lib/theme';
 import { addDays, parseIsoDate, toIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { useAuthStore } from '@/stores/auth-store';
 import { useBookingStore } from '@/stores/booking-store';
@@ -57,6 +58,7 @@ export default function BookingDateTimeScreen() {
   const { i18n, t } = useTranslation();
   const { showToast } = useToast();
   const rtlLayout = getRtlLayout(i18n.language);
+  const { colors } = useAppTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
   const session = useAuthStore((state) => state.session);
@@ -407,7 +409,7 @@ export default function BookingDateTimeScreen() {
 
   if (!hasContext) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('customer.datetime.backToExplore')}
           description={t('customer.datetime.errors.missingContext')}
@@ -424,7 +426,7 @@ export default function BookingDateTimeScreen() {
 
   if (isBaseDataError) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
         <StateCard
           actionLabel={t('customer.datetime.retryButton')}
           description={t('customer.datetime.errors.loadFailed')}
@@ -436,7 +438,7 @@ export default function BookingDateTimeScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <View style={styles.contentContainer}>
         <Card>
           <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
@@ -498,7 +500,7 @@ export default function BookingDateTimeScreen() {
         </View>
       </View>
 
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
         <Card>
           <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
             {t('customer.datetime.totalDuration', {
@@ -526,7 +528,7 @@ export default function BookingDateTimeScreen() {
         presentationStyle="formSheet"
         visible={isReviewModalVisible}
       >
-        <View style={styles.modalScreen}>
+        <View style={[styles.modalScreen, { backgroundColor: colors.background }]}>
           <Card>
             <Text fontFamily="$heading" fontSize={26} fontWeight="800" lineHeight={32} textAlign={rtlLayout.textAlign}>
               {t('customer.datetime.reviewTitle')}
@@ -593,8 +595,6 @@ export default function BookingDateTimeScreen() {
 
 const styles = StyleSheet.create({
   bottomBar: {
-    backgroundColor: '#ffffff',
-    borderTopColor: '#e2e8f0',
     borderTopWidth: 1,
     padding: 16,
     paddingTop: 10,
