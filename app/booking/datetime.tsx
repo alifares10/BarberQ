@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button, ButtonText, Card, DateChip, Input, LoadingScreen, Text, TimeSlotChip } from '@/components';
+import { Button, ButtonText, Card, DateChip, Input, LoadingScreen, StateCard, Text, TimeSlotChip, useToast } from '@/components';
 import {
   createAppointment,
   createAppointmentServices,
@@ -20,6 +20,7 @@ import {
 import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { generateAvailableSlots, minutesToTime, timeToMinutes } from '@/lib/customer/slot-helpers';
 import { notifyNewBooking } from '@/lib/push/notify-booking';
+import { getRtlLayout } from '@/lib/rtl';
 import { addDays, parseIsoDate, toIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { useAuthStore } from '@/stores/auth-store';
 import { useBookingStore } from '@/stores/booking-store';
@@ -54,6 +55,8 @@ function getErrorCode(error: unknown) {
 
 export default function BookingDateTimeScreen() {
   const { i18n, t } = useTranslation();
+  const { showToast } = useToast();
+  const rtlLayout = getRtlLayout(i18n.language);
   const router = useRouter();
   const queryClient = useQueryClient();
   const session = useAuthStore((state) => state.session);
@@ -315,6 +318,7 @@ export default function BookingDateTimeScreen() {
       }
 
       setSubmissionError(null);
+      showToast({ message: t('toast.bookingCreated'), type: 'success' });
       setReviewModalVisible(false);
       resetBooking();
       router.replace('/(customer)/bookings');
@@ -389,8 +393,8 @@ export default function BookingDateTimeScreen() {
   const renderSelectedService = useCallback<ListRenderItem<SelectedServiceRow>>(
     ({ item }) => (
       <Card>
-        <Text fontWeight="700">{item.name}</Text>
-        <Text color="$colorMuted">
+        <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{item.name}</Text>
+        <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
           {t('customer.datetime.serviceLine', {
             duration: item.duration,
             price: item.price.toFixed(2),
@@ -398,18 +402,18 @@ export default function BookingDateTimeScreen() {
         </Text>
       </Card>
     ),
-    [t]
+    [rtlLayout.textAlign, t]
   );
 
   if (!hasContext) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.datetime.errors.missingContext')}</Text>
-          <Button onPress={() => router.replace('/(customer)')}>
-            <ButtonText>{t('customer.datetime.backToExplore')}</ButtonText>
-          </Button>
-        </Card>
+        <StateCard
+          actionLabel={t('customer.datetime.backToExplore')}
+          description={t('customer.datetime.errors.missingContext')}
+          onAction={() => router.replace('/(customer)')}
+          variant="error"
+        />
       </View>
     );
   }
@@ -421,12 +425,12 @@ export default function BookingDateTimeScreen() {
   if (isBaseDataError) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.datetime.errors.loadFailed')}</Text>
-          <Button onPress={handleRetryBaseData}>
-            <ButtonText>{t('customer.datetime.retryButton')}</ButtonText>
-          </Button>
-        </Card>
+        <StateCard
+          actionLabel={t('customer.datetime.retryButton')}
+          description={t('customer.datetime.errors.loadFailed')}
+          onAction={handleRetryBaseData}
+          variant="error"
+        />
       </View>
     );
   }
@@ -435,14 +439,14 @@ export default function BookingDateTimeScreen() {
     <View style={styles.screen}>
       <View style={styles.contentContainer}>
         <Card>
-          <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
+          <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
             {t('customer.datetime.title')}
           </Text>
-          <Text color="$colorMuted">{t('customer.datetime.description')}</Text>
+          <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.datetime.description')}</Text>
         </Card>
 
         <Card>
-          <Text fontWeight="700">{t('customer.datetime.dateSectionTitle')}</Text>
+          <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('customer.datetime.dateSectionTitle')}</Text>
           <FlashList
             contentContainerStyle={styles.dateListContent}
             contentInsetAdjustmentBehavior="automatic"
@@ -458,38 +462,28 @@ export default function BookingDateTimeScreen() {
 
         <View style={styles.slotsContainer}>
           <Card>
-            <Text fontWeight="700">{t('customer.datetime.timeSectionTitle')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('customer.datetime.timeSectionTitle')}</Text>
           </Card>
 
           {selectedDate == null ? (
-            <Card>
-              <Text color="$colorMuted">{t('customer.datetime.selectDatePrompt')}</Text>
-            </Card>
+            <StateCard description={t('customer.datetime.selectDatePrompt')} variant="info" />
           ) : isLoadingAvailability ? (
-            <Card>
-              <Text color="$colorMuted">{t('customer.datetime.loadingAvailability')}</Text>
-            </Card>
+            <StateCard description={t('customer.datetime.loadingAvailability')} variant="loading" />
           ) : hasAvailabilityError ? (
-            <Card>
-              <Text color="$error">{t('customer.datetime.errors.availabilityFailed')}</Text>
-              <Button onPress={handleRetryAvailability}>
-                <ButtonText>{t('customer.datetime.retryButton')}</ButtonText>
-              </Button>
-            </Card>
+            <StateCard
+              actionLabel={t('customer.datetime.retryButton')}
+              description={t('customer.datetime.errors.availabilityFailed')}
+              onAction={handleRetryAvailability}
+              variant="error"
+            />
           ) : shopClosureQuery.data != null ? (
-            <Card>
-              <Text color="$warning">{t('customer.datetime.shopClosed')}</Text>
-            </Card>
+            <StateCard description={t('customer.datetime.shopClosed')} variant="info" />
           ) : barberUnavailableQuery.data != null ? (
-            <Card>
-              <Text color="$warning">{t('customer.datetime.barberUnavailable')}</Text>
-            </Card>
+            <StateCard description={t('customer.datetime.barberUnavailable')} variant="info" />
           ) : (
             <FlashList
               ListEmptyComponent={
-                <Card>
-                  <Text color="$colorMuted">{t('customer.datetime.noSlots')}</Text>
-                </Card>
+                <StateCard description={t('customer.datetime.noSlots')} variant="empty" />
               }
               contentContainerStyle={styles.slotListContent}
               contentInsetAdjustmentBehavior="automatic"
@@ -506,18 +500,18 @@ export default function BookingDateTimeScreen() {
 
       <View style={styles.bottomBar}>
         <Card>
-          <Text color="$colorMuted">
+          <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
             {t('customer.datetime.totalDuration', {
               minutes: totals.totalDurationMinutes,
             })}
           </Text>
-          <Text color="$colorMuted">
+          <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
             {t('customer.datetime.totalPrice', {
               price: totals.totalPrice.toFixed(2),
             })}
           </Text>
           {selectedTime != null ? (
-            <Text color="$accent">{t('customer.datetime.timeLabel', { time: selectedTime })}</Text>
+            <Text color="$accent" textAlign={rtlLayout.textAlign}>{t('customer.datetime.timeLabel', { time: selectedTime })}</Text>
           ) : null}
 
           <Button disabled={!canReview} onPress={handleReviewBooking}>
@@ -534,17 +528,17 @@ export default function BookingDateTimeScreen() {
       >
         <View style={styles.modalScreen}>
           <Card>
-            <Text fontFamily="$heading" fontSize={26} fontWeight="800" lineHeight={32}>
+            <Text fontFamily="$heading" fontSize={26} fontWeight="800" lineHeight={32} textAlign={rtlLayout.textAlign}>
               {t('customer.datetime.reviewTitle')}
             </Text>
-            <Text color="$colorMuted">{t('customer.datetime.shopLabel', { shopName })}</Text>
-            <Text color="$colorMuted">{t('customer.datetime.barberLabel', { barberName })}</Text>
-            <Text color="$colorMuted">{t('customer.datetime.dateLabel', { date: selectedDate ?? '-' })}</Text>
-            <Text color="$colorMuted">{t('customer.datetime.timeLabel', { time: selectedTime ?? '-' })}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.datetime.shopLabel', { shopName })}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.datetime.barberLabel', { barberName })}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.datetime.dateLabel', { date: selectedDate ?? '-' })}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.datetime.timeLabel', { time: selectedTime ?? '-' })}</Text>
           </Card>
 
           <Card>
-            <Text fontWeight="700">{t('customer.datetime.servicesTitle')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('customer.datetime.servicesTitle')}</Text>
             <View style={styles.summaryServicesWrapper}>
               <FlashList
                 ItemSeparatorComponent={() => <View style={styles.summaryServiceSeparator} />}
@@ -554,12 +548,12 @@ export default function BookingDateTimeScreen() {
                 renderItem={renderSelectedService}
               />
             </View>
-            <Text color="$colorMuted">
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
               {t('customer.datetime.totalDuration', {
                 minutes: totals.totalDurationMinutes,
               })}
             </Text>
-            <Text color="$colorMuted">
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
               {t('customer.datetime.totalPrice', {
                 price: totals.totalPrice.toFixed(2),
               })}
@@ -567,7 +561,7 @@ export default function BookingDateTimeScreen() {
           </Card>
 
           <Card>
-            <Text fontWeight="700">{t('customer.datetime.notesLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('customer.datetime.notesLabel')}</Text>
             <Input
               multiline
               numberOfLines={4}
@@ -576,9 +570,9 @@ export default function BookingDateTimeScreen() {
               value={notes}
             />
 
-            {submissionError != null ? <Text color="$error">{submissionError}</Text> : null}
+            {submissionError != null ? <Text color="$error" textAlign={rtlLayout.textAlign}>{submissionError}</Text> : null}
 
-            <View style={styles.modalActionRow}>
+            <View style={[styles.modalActionRow, { flexDirection: rtlLayout.rowDirection }]}>
               <Button onPress={() => setReviewModalVisible(false)}>
                 <ButtonText>{t('customer.datetime.closeButton')}</ButtonText>
               </Button>
@@ -620,7 +614,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalActionRow: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
   },

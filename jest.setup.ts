@@ -43,6 +43,20 @@ jest.mock('react-native-gesture-handler', () => {
   };
 });
 
+jest.mock('react-native-safe-area-context', () => {
+  const { View } = jest.requireActual('react-native');
+
+  return {
+    SafeAreaProvider: View,
+    useSafeAreaInsets: () => ({
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+    }),
+  };
+});
+
 jest.mock('react-native-reanimated', () => {
   const View = jest.requireActual('react-native').View;
   return {

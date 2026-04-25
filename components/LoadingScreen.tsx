@@ -1,5 +1,6 @@
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
+import i18n from '@/lib/i18n';
 import { Text } from '@/components/Text/Text';
 
 type LoadingScreenProps = {
@@ -8,18 +9,26 @@ type LoadingScreenProps = {
 };
 
 export function LoadingScreen({
-  description = 'Checking your session and preparing the app.',
-  title = 'Loading BarberQ',
+  description,
+  title,
 }: LoadingScreenProps) {
+  const resolvedTitle =
+    title ?? (i18n.isInitialized ? i18n.t('common.loadingTitle') : 'Loading BarberQ');
+  const resolvedDescription =
+    description ??
+    (i18n.isInitialized
+      ? i18n.t('common.loadingDescription')
+      : 'Checking your session and preparing the app.');
+
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
       <View style={styles.container}>
         <ActivityIndicator size="large" />
         <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign="center">
-          {title}
+          {resolvedTitle}
         </Text>
         <Text color="$colorMuted" textAlign="center">
-          {description}
+          {resolvedDescription}
         </Text>
       </View>
     </ScrollView>

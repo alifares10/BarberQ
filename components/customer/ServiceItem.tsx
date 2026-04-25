@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Card } from '@/components/Card/Card';
 import { Text } from '@/components/Text/Text';
+import { getRtlLayout } from '@/lib/rtl';
 
 type ServiceItemProps = {
   duration: number;
@@ -24,7 +25,8 @@ export const ServiceItem = memo(function ServiceItem({
   price,
   serviceId,
 }: ServiceItemProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
   const isPressed = useSharedValue(0);
   const pressGesture = Gesture.Tap()
     .onBegin(() => {
@@ -47,23 +49,23 @@ export const ServiceItem = memo(function ServiceItem({
       <Animated.View style={animatedStyle}>
         <Pressable onPress={() => onToggle(serviceId)}>
           <Card style={isSelected ? styles.selectedCard : styles.card}>
-            <View style={styles.row}>
-              <View style={styles.column}>
-                <Text fontWeight="700">{name}</Text>
-                <Text color="$colorMuted">
+            <View style={[styles.row, { flexDirection: rtlLayout.rowDirection }]}>
+              <View style={[styles.column, { alignItems: rtlLayout.leadingAlignItems }]}>
+                <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{name}</Text>
+                <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
                   {t('customer.serviceSelection.durationMinutes', {
                     minutes: duration,
                   })}
                 </Text>
               </View>
 
-              <View style={styles.rightColumn}>
-                <Text fontWeight="700">
+              <View style={[styles.rightColumn, { alignItems: rtlLayout.trailingAlignItems }]}>
+                <Text fontWeight="700" textAlign={rtlLayout.textAlign}>
                   {t('customer.serviceSelection.priceValue', {
                     price: price.toFixed(2),
                   })}
                 </Text>
-                {isSelected ? <Text color="$accent">{t('customer.serviceSelection.selected')}</Text> : null}
+                {isSelected ? <Text color="$accent" textAlign={rtlLayout.textAlign}>{t('customer.serviceSelection.selected')}</Text> : null}
               </View>
             </View>
           </Card>
@@ -84,7 +86,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   rightColumn: {
-    alignItems: 'flex-end',
     gap: 4,
   },
   row: {

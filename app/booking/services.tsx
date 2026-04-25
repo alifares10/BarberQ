@@ -5,9 +5,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button, ButtonText, Card, LoadingScreen, ServiceItem, Text } from '@/components';
+import { Button, ButtonText, Card, LoadingScreen, ServiceItem, StateCard, Text } from '@/components';
 import { fetchServicesByBarberId } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
+import { getRtlLayout } from '@/lib/rtl';
 import { useBookingStore } from '@/stores/booking-store';
 
 type ServiceRow = {
@@ -19,7 +20,8 @@ type ServiceRow = {
 };
 
 export default function ServicesScreen() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
   const router = useRouter();
   const selectedBarberId = useBookingStore((state) => state.selectedBarberId);
   const selectedServiceIdsInStore = useBookingStore((state) => state.selectedServiceIds);
@@ -102,12 +104,12 @@ export default function ServicesScreen() {
   if (selectedBarberId == null) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.serviceSelection.missingBarber')}</Text>
-          <Button onPress={() => router.replace('/(customer)')}>
-            <ButtonText>{t('customer.serviceSelection.backToExplore')}</ButtonText>
-          </Button>
-        </Card>
+        <StateCard
+          actionLabel={t('customer.serviceSelection.backToExplore')}
+          description={t('customer.serviceSelection.missingBarber')}
+          onAction={() => router.replace('/(customer)')}
+          variant="error"
+        />
       </View>
     );
   }
@@ -119,12 +121,12 @@ export default function ServicesScreen() {
   if (servicesQuery.isError) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.serviceSelection.loadError')}</Text>
-          <Button onPress={() => void servicesQuery.refetch()}>
-            <ButtonText>{t('customer.serviceSelection.retryButton')}</ButtonText>
-          </Button>
-        </Card>
+        <StateCard
+          actionLabel={t('customer.serviceSelection.retryButton')}
+          description={t('customer.serviceSelection.loadError')}
+          onAction={() => void servicesQuery.refetch()}
+          variant="error"
+        />
       </View>
     );
   }
@@ -133,16 +135,14 @@ export default function ServicesScreen() {
     <View style={styles.screen}>
       <FlashList
         ListEmptyComponent={
-          <Card>
-            <Text color="$colorMuted">{t('customer.serviceSelection.empty')}</Text>
-          </Card>
+          <StateCard description={t('customer.serviceSelection.empty')} variant="empty" />
         }
         ListHeaderComponent={
           <Card>
-            <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
+            <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
               {t('customer.serviceSelection.title')}
             </Text>
-            <Text color="$colorMuted">{t('customer.serviceSelection.description')}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.serviceSelection.description')}</Text>
           </Card>
         }
         contentContainerStyle={styles.listContent}
@@ -155,17 +155,17 @@ export default function ServicesScreen() {
 
       <View style={styles.bottomBar}>
         <Card>
-          <Text color="$colorMuted">
+          <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
             {t('customer.serviceSelection.selectedCount', {
               count: selectedServiceIds.length,
             })}
           </Text>
-          <Text>
+          <Text textAlign={rtlLayout.textAlign}>
             {t('customer.serviceSelection.totalDuration', {
               minutes: totals.totalDuration,
             })}
           </Text>
-          <Text>
+          <Text textAlign={rtlLayout.textAlign}>
             {t('customer.serviceSelection.totalPrice', {
               price: totals.totalPrice.toFixed(2),
             })}

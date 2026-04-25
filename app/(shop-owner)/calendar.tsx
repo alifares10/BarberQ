@@ -5,8 +5,9 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button, ButtonText, Card, LoadingScreen, Text } from '@/components';
+import { Button, ButtonText, Card, LoadingScreen, StateCard, Text, useToast } from '@/components';
 import { notifyBookingCancelled, notifyBookingConfirmed } from '@/lib/push/notify-booking';
+import { getRtlLayout } from '@/lib/rtl';
 import {
   fetchShopAppointmentsByDateRange,
   fetchShopByOwnerId,
@@ -65,16 +66,17 @@ const AppointmentRow = memo(function AppointmentRow({
   statusText,
   timeRangeText,
 }: AppointmentRowProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
 
   return (
     <Pressable accessibilityRole="button" onPress={() => onPress(appointmentId)}>
       <Card>
-        <Text fontWeight="700">{timeRangeText}</Text>
-        <Text color="$colorMuted">{t('shopOwner.calendar.itemBarber', { barber: barberName })}</Text>
-        <Text color="$colorMuted">{t('shopOwner.calendar.itemCustomer', { customer: customerName })}</Text>
-        <Text color="$colorMuted">{t('shopOwner.calendar.itemStatus', { status: statusText })}</Text>
-        {notes != null && notes.trim().length > 0 ? <Text color="$colorMuted">{notes}</Text> : null}
+        <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{timeRangeText}</Text>
+        <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.calendar.itemBarber', { barber: barberName })}</Text>
+        <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.calendar.itemCustomer', { customer: customerName })}</Text>
+        <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.calendar.itemStatus', { status: statusText })}</Text>
+        {notes != null && notes.trim().length > 0 ? <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{notes}</Text> : null}
       </Card>
     </Pressable>
   );
@@ -82,6 +84,8 @@ const AppointmentRow = memo(function AppointmentRow({
 
 export default function CalendarScreen() {
   const { i18n, t } = useTranslation();
+  const { showToast } = useToast();
+  const rtlLayout = getRtlLayout(i18n.language);
   const queryClient = useQueryClient();
   const router = useRouter();
   const session = useAuthStore((state) => state.session);
@@ -224,14 +228,17 @@ export default function CalendarScreen() {
     }) => updateAppointmentStatus(appointmentId, status),
     onError: () => {
       setStatusUpdateError(t('shopOwner.calendar.statusUpdateError'));
+      showToast({ message: t('shopOwner.calendar.statusUpdateError'), type: 'error' });
     },
     onSuccess: async (appointment, variables) => {
       if (variables.status === 'confirmed') {
         void notifyBookingConfirmed(appointment.id);
+        showToast({ message: t('toast.appointmentConfirmed'), type: 'success' });
       }
 
       if (variables.status === 'cancelled') {
         void notifyBookingCancelled(appointment.id, 'shop');
+        showToast({ message: t('toast.appointmentCancelled'), type: 'success' });
       }
 
       if (shopId != null) {
@@ -261,7 +268,7 @@ export default function CalendarScreen() {
       if (item.type === 'header') {
         return (
           <View style={styles.dayHeaderRow}>
-            <Text fontWeight="700">{item.label}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{item.label}</Text>
           </View>
         );
       }
@@ -278,7 +285,7 @@ export default function CalendarScreen() {
         />
       );
     },
-    [handleOpenAppointment]
+    [handleOpenAppointment, rtlLayout.textAlign]
   );
 
   if (shopQuery.isPending || (shopId != null && appointmentsQuery.isPending)) {
@@ -295,60 +302,58 @@ export default function CalendarScreen() {
       <FlashList
         ListEmptyComponent={
           shopId != null && !appointmentsQuery.isError ? (
-            <Card>
-              <Text color="$colorMuted">{t('shopOwner.calendar.empty')}</Text>
-            </Card>
+            <StateCard description={t('shopOwner.calendar.empty')} variant="empty" />
           ) : null
         }
         ListHeaderComponent={
           <View style={styles.headerContent}>
             <Card>
-              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
+              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
                 {t('shopOwner.calendar.title')}
               </Text>
-              <Text color="$colorMuted">{t('shopOwner.calendar.description')}</Text>
+              <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.calendar.description')}</Text>
             </Card>
 
             {shopId == null ? (
-              <Card>
-                <Text fontWeight="700">{t('shopOwner.calendar.missingShopTitle')}</Text>
-                <Text color="$colorMuted">{t('shopOwner.calendar.missingShopDescription')}</Text>
-                <Button onPress={() => router.push('/(shop-owner)/shop')}>
-                  <ButtonText>{t('shopOwner.calendar.goToShopButton')}</ButtonText>
-                </Button>
-              </Card>
+              <StateCard
+                actionLabel={t('shopOwner.calendar.goToShopButton')}
+                description={t('shopOwner.calendar.missingShopDescription')}
+                onAction={() => router.push('/(shop-owner)/shop')}
+                title={t('shopOwner.calendar.missingShopTitle')}
+                variant="info"
+              />
             ) : null}
 
             {appointmentsQuery.isError ? (
-              <Card>
-                <Text color="$error">{t('shopOwner.calendar.loadError')}</Text>
-                <Button onPress={() => void appointmentsQuery.refetch()}>
-                  <ButtonText>{t('shopOwner.calendar.retryButton')}</ButtonText>
-                </Button>
-              </Card>
+              <StateCard
+                actionLabel={t('shopOwner.calendar.retryButton')}
+                description={t('shopOwner.calendar.loadError')}
+                onAction={() => void appointmentsQuery.refetch()}
+                variant="error"
+              />
             ) : null}
 
             {shopId != null && !appointmentsQuery.isError ? (
               <Card>
-                <Text fontWeight="700">{t('shopOwner.calendar.rangeTitle')}</Text>
-                <Text color="$colorMuted">{rangeLabel}</Text>
+                <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.calendar.rangeTitle')}</Text>
+                <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{rangeLabel}</Text>
 
-                <View style={styles.modeRow}>
+                <View style={[styles.modeRow, { flexDirection: rtlLayout.rowDirection }]}>
                   <Pressable
                     onPress={() => setMode('week')}
                     style={[styles.modePill, mode === 'week' ? styles.modePillActive : null]}
                   >
-                    <Text color={mode === 'week' ? '$inverseColor' : '$colorMuted'}>{t('shopOwner.calendar.weekMode')}</Text>
+                    <Text color={mode === 'week' ? '$inverseColor' : '$colorMuted'} textAlign="center">{t('shopOwner.calendar.weekMode')}</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => setMode('month')}
                     style={[styles.modePill, mode === 'month' ? styles.modePillActive : null]}
                   >
-                    <Text color={mode === 'month' ? '$inverseColor' : '$colorMuted'}>{t('shopOwner.calendar.monthMode')}</Text>
+                    <Text color={mode === 'month' ? '$inverseColor' : '$colorMuted'} textAlign="center">{t('shopOwner.calendar.monthMode')}</Text>
                   </Pressable>
                 </View>
 
-                <View style={styles.navRow}>
+                <View style={[styles.navRow, { flexDirection: rtlLayout.rowDirection }]}>
                   <Button onPress={() => handleMoveRange('previous')}>
                     <ButtonText>{t('shopOwner.calendar.previousButton')}</ButtonText>
                   </Button>
@@ -376,23 +381,23 @@ export default function CalendarScreen() {
       >
         <View style={styles.modalScreen}>
           <Card>
-            <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
+            <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
               {t('shopOwner.calendar.appointmentDetailsTitle')}
             </Text>
 
-            <Text color="$colorMuted">
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
               {t('shopOwner.calendar.itemBarber', {
                 barber: selectedAppointment?.barber?.name ?? t('shopOwner.calendar.unknownBarber'),
               })}
             </Text>
-            <Text color="$colorMuted">
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
               {t('shopOwner.calendar.itemCustomer', {
                 customer: selectedAppointment?.customer?.full_name ?? t('shopOwner.calendar.unknownCustomer'),
               })}
             </Text>
-            <Text color="$colorMuted">{selectedAppointmentDateLabel}</Text>
-            <Text color="$colorMuted">{selectedAppointmentTimeRange}</Text>
-            <Text color="$colorMuted">
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{selectedAppointmentDateLabel}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{selectedAppointmentTimeRange}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
               {t('shopOwner.calendar.itemStatus', {
                 status:
                   selectedAppointment != null
@@ -401,10 +406,10 @@ export default function CalendarScreen() {
               })}
             </Text>
             {selectedAppointment?.notes != null && selectedAppointment.notes.trim().length > 0 ? (
-              <Text color="$colorMuted">{selectedAppointment.notes}</Text>
+              <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{selectedAppointment.notes}</Text>
             ) : null}
 
-            {statusUpdateError != null ? <Text color="$error">{statusUpdateError}</Text> : null}
+            {statusUpdateError != null ? <Text color="$error" textAlign={rtlLayout.textAlign}>{statusUpdateError}</Text> : null}
 
             <View style={styles.modalActions}>
               {canConfirmSelectedAppointment ? (
@@ -463,6 +468,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f8fafc',
     borderColor: '#cbd5e1',
+    borderCurve: 'continuous',
     borderRadius: 999,
     borderWidth: 1,
     minWidth: 84,
@@ -474,12 +480,10 @@ const styles = StyleSheet.create({
     borderColor: '#0f172a',
   },
   modeRow: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   navRow: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },

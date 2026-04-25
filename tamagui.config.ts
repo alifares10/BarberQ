@@ -32,9 +32,9 @@ const bodyFont = createFont({
   },
   letterSpacing: {
     4: 0,
-    5: -0.1,
-    6: -0.2,
-    7: -0.3,
+    5: 0,
+    6: 0,
+    7: 0,
   },
 });
 
@@ -62,11 +62,11 @@ const headingFont = createFont({
     8: '800',
   },
   letterSpacing: {
-    4: -0.2,
-    5: -0.3,
-    6: -0.4,
-    7: -0.5,
-    8: -0.6,
+    4: 0,
+    5: 0,
+    6: 0,
+    7: 0,
+    8: 0,
   },
 });
 

@@ -6,10 +6,11 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button, ButtonText, Card, ExploreMap, Input, LoadingScreen, ShopCard, Text } from '@/components';
+import { Card, ExploreMap, Input, LoadingScreen, ShopCard, StateCard, Text } from '@/components';
 import { calculateDistanceKm, formatDistance } from '@/lib/customer/distance';
 import { fetchActiveShops, type CustomerShop } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
+import { getRtlLayout } from '@/lib/rtl';
 
 const TEL_AVIV_COORDINATES = {
   latitude: 32.0853,
@@ -61,7 +62,8 @@ const ShopListItem = memo(function ShopListItem({
 });
 
 export default function ExploreScreen() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceFilter, setSelectedServiceFilter] = useState<string | null>(null);
@@ -238,18 +240,20 @@ export default function ExploreScreen() {
       <View style={styles.controls}>
         {locationState === 'denied' ? (
           <Card style={styles.locationBanner}>
-            <Text color="$colorMuted">{t('customer.explore.locationDenied')}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.explore.locationDenied')}</Text>
           </Card>
         ) : null}
 
         <Input onChangeText={setSearchQuery} placeholder={t('customer.explore.searchPlaceholder')} value={searchQuery} />
 
-        <View style={styles.chipsRow}>
+        <View style={[styles.chipsRow, { flexDirection: rtlLayout.rowDirection }]}>
           <Pressable
             onPress={() => setSelectedServiceFilter(null)}
             style={selectedServiceFilter == null ? styles.chipActive : styles.chip}
           >
-            <Text color={selectedServiceFilter == null ? '$inverseColor' : '$colorMuted'}>{t('customer.explore.allServices')}</Text>
+            <Text color={selectedServiceFilter == null ? '$inverseColor' : '$colorMuted'} textAlign="center">
+              {t('customer.explore.allServices')}
+            </Text>
           </Pressable>
 
           {serviceOptions.map((option) => {
@@ -261,7 +265,7 @@ export default function ExploreScreen() {
                 onPress={() => setSelectedServiceFilter(option.id)}
                 style={isSelected ? styles.chipActive : styles.chip}
               >
-                <Text color={isSelected ? '$inverseColor' : '$colorMuted'}>{option.name}</Text>
+                <Text color={isSelected ? '$inverseColor' : '$colorMuted'} textAlign="center">{option.name}</Text>
               </Pressable>
             );
           })}
@@ -270,19 +274,17 @@ export default function ExploreScreen() {
 
       {shopsQuery.isError ? (
         <View style={styles.errorContainer}>
-          <Card>
-            <Text color="$error">{t('customer.explore.loadError')}</Text>
-            <Button onPress={() => void shopsQuery.refetch()}>
-              <ButtonText>{t('customer.explore.retryButton')}</ButtonText>
-            </Button>
-          </Card>
+          <StateCard
+            actionLabel={t('customer.explore.retryButton')}
+            description={t('customer.explore.loadError')}
+            onAction={() => void shopsQuery.refetch()}
+            variant="error"
+          />
         </View>
       ) : (
         <FlashList
           ListEmptyComponent={
-            <Card>
-              <Text color="$colorMuted">{t('customer.explore.noShops')}</Text>
-            </Card>
+            <StateCard description={t('customer.explore.noShops')} variant="empty" />
           }
           contentContainerStyle={styles.listContent}
           contentInsetAdjustmentBehavior="automatic"
@@ -312,7 +314,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   chipsRow: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },

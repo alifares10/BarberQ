@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, ButtonText } from '@/components/Button/Button';
 import { Card } from '@/components/Card/Card';
 import { Text } from '@/components/Text/Text';
+import { getRtlLayout } from '@/lib/rtl';
 
 type AppointmentCardProps = {
   appointmentId: string;
@@ -37,21 +38,22 @@ export const AppointmentCard = memo(function AppointmentCard({
   status,
   statusLabel,
 }: AppointmentCardProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
 
   return (
     <Card>
-      <View style={styles.headerRow}>
-        <Text fontWeight="700">{shopName}</Text>
+      <View style={[styles.headerRow, { flexDirection: rtlLayout.rowDirection }]}>
+        <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{shopName}</Text>
         <View style={[styles.statusBadge, status === 'pending' && styles.pendingBadge, status === 'confirmed' && styles.confirmedBadge, status === 'completed' && styles.completedBadge, status === 'cancelled' && styles.cancelledBadge]}>
           <Text color="$inverseColor">{statusLabel}</Text>
         </View>
       </View>
 
-      <Text color="$colorMuted">{t('customer.bookings.barberLine', { barber: barberName })}</Text>
-      <Text color="$colorMuted">{date}</Text>
-      <Text color="$colorMuted">{`${startTime} - ${endTime}`}</Text>
-      <Text color="$colorMuted">{servicesSummary}</Text>
+      <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.bookings.barberLine', { barber: barberName })}</Text>
+      <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{date}</Text>
+      <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{`${startTime} - ${endTime}`}</Text>
+      <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{servicesSummary}</Text>
 
       {showCancelAction ? (
         <View style={styles.cancelSection}>
@@ -60,7 +62,7 @@ export const AppointmentCard = memo(function AppointmentCard({
               {isCancelling ? t('customer.bookings.cancellingButton') : t('customer.bookings.cancelButton')}
             </ButtonText>
           </Button>
-          {!canCancel ? <Text color="$colorMuted">{t('customer.bookings.cancelBlocked')}</Text> : null}
+          {!canCancel ? <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.bookings.cancelBlocked')}</Text> : null}
         </View>
       ) : null}
     </Card>
@@ -82,8 +84,8 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     alignItems: 'center',
-    flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 12,
   },
   pendingBadge: {
     backgroundColor: '#f97316',

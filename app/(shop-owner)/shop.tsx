@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button, ButtonText, Card, Input, LoadingScreen, ShopClosuresCard, Text } from '@/components';
+import { Button, ButtonText, Card, Input, LoadingScreen, ShopClosuresCard, StateCard, Text, useToast } from '@/components';
+import { getRtlLayout } from '@/lib/rtl';
 import { createShop, fetchShopByOwnerId, updateShop, uploadShopCoverImage } from '@/lib/shop-owner/api';
 import { geocodeAddress } from '@/lib/shop-owner/geocoding';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
@@ -36,14 +37,15 @@ const DEFAULT_FORM_STATE: ShopFormState = {
 };
 
 export default function ShopManagementScreen() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const { showToast } = useToast();
+  const rtlLayout = getRtlLayout(i18n.language);
   const queryClient = useQueryClient();
   const session = useAuthStore((state) => state.session);
   const ownerId = session?.user.id ?? null;
   const [form, setForm] = useState<ShopFormState>(DEFAULT_FORM_STATE);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingCoverImage, setPendingCoverImage] = useState<PendingPickedImage | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const shopQuery = useQuery({
     enabled: ownerId != null,
     queryFn: () => fetchShopByOwnerId(ownerId ?? ''),
@@ -133,7 +135,7 @@ export default function ShopManagementScreen() {
 
       setPendingCoverImage(null);
       setErrorMessage(null);
-      setSuccessMessage(t('shopOwner.shopManagement.success.saved'));
+      showToast({ message: t('toast.shopSaved'), type: 'success' });
     },
   });
 
@@ -160,7 +162,6 @@ export default function ShopManagementScreen() {
 
   const handlePickCoverImage = async () => {
     setErrorMessage(null);
-    setSuccessMessage(null);
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -208,14 +209,13 @@ export default function ShopManagementScreen() {
   };
 
   const handleSave = async () => {
-    setSuccessMessage(null);
-
     try {
       await saveMutation.mutateAsync();
     } catch (error) {
       const message = error instanceof Error ? error.message : t('shopOwner.shopManagement.errors.generic');
 
       setErrorMessage(message);
+      showToast({ message: t('toast.shopSaveFailed'), type: 'error' });
     }
   };
 
@@ -226,12 +226,12 @@ export default function ShopManagementScreen() {
   if (shopQuery.isError && shopQuery.data == null) {
     return (
       <View style={styles.errorScreen}>
-        <Card>
-          <Text color="$error">{t('shopOwner.shopManagement.loadError')}</Text>
-          <Button onPress={() => void shopQuery.refetch()}>
-            <ButtonText>{t('shopOwner.shopManagement.retryButton')}</ButtonText>
-          </Button>
-        </Card>
+        <StateCard
+          actionLabel={t('shopOwner.shopManagement.retryButton')}
+          description={t('shopOwner.shopManagement.loadError')}
+          onAction={() => void shopQuery.refetch()}
+          variant="error"
+        />
       </View>
     );
   }
@@ -244,29 +244,29 @@ export default function ShopManagementScreen() {
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
       <View style={styles.container}>
         <Card>
-          <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
+          <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
             {t('shopOwner.shopManagement.title')}
           </Text>
-          <Text color="$colorMuted">{t('shopOwner.shopManagement.description')}</Text>
-
-          {shopQuery.isError ? (
-            <>
-              <Text color="$error">{t('shopOwner.shopManagement.loadError')}</Text>
-              <Button onPress={() => void shopQuery.refetch()}>
-                <ButtonText>{t('shopOwner.shopManagement.retryButton')}</ButtonText>
-              </Button>
-            </>
-          ) : null}
+          <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopManagement.description')}</Text>
         </Card>
+
+        {shopQuery.isError ? (
+          <StateCard
+            actionLabel={t('shopOwner.shopManagement.retryButton')}
+            description={t('shopOwner.shopManagement.loadError')}
+            onAction={() => void shopQuery.refetch()}
+            variant="error"
+          />
+        ) : null}
 
         <Card>
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopManagement.coverLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopManagement.coverLabel')}</Text>
             {currentCoverImage != null ? (
               <Image source={{ uri: currentCoverImage }} style={styles.coverImage} contentFit="cover" />
             ) : (
               <View style={styles.coverPlaceholder}>
-                <Text color="$colorMuted">{t('shopOwner.shopManagement.coverPlaceholder')}</Text>
+                <Text color="$colorMuted" textAlign="center">{t('shopOwner.shopManagement.coverPlaceholder')}</Text>
               </View>
             )}
             <Button onPress={() => void handlePickCoverImage()} disabled={isSaving}>
@@ -277,7 +277,7 @@ export default function ShopManagementScreen() {
 
         <Card>
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopManagement.nameLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopManagement.nameLabel')}</Text>
             <Input
               autoCapitalize="words"
               onChangeText={(value) => handleChange('name', value)}
@@ -287,7 +287,7 @@ export default function ShopManagementScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopManagement.addressLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopManagement.addressLabel')}</Text>
             <Input
               autoCapitalize="words"
               onChangeText={(value) => handleChange('address', value)}
@@ -297,7 +297,7 @@ export default function ShopManagementScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopManagement.phoneLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopManagement.phoneLabel')}</Text>
             <Input
               autoCapitalize="none"
               keyboardType="phone-pad"
@@ -308,7 +308,7 @@ export default function ShopManagementScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopManagement.descriptionLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopManagement.descriptionLabel')}</Text>
             <Input
               multiline
               numberOfLines={4}
@@ -319,7 +319,7 @@ export default function ShopManagementScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopManagement.bufferLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopManagement.bufferLabel')}</Text>
             <Input
               keyboardType="number-pad"
               onChangeText={(value) => handleChange('bufferMinutes', value)}
@@ -329,7 +329,7 @@ export default function ShopManagementScreen() {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopManagement.cancellationWindowLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopManagement.cancellationWindowLabel')}</Text>
             <Input
               keyboardType="number-pad"
               onChangeText={(value) => handleChange('cancellationWindowHours', value)}
@@ -338,8 +338,7 @@ export default function ShopManagementScreen() {
             />
           </View>
 
-          {errorMessage != null ? <Text color="$error">{errorMessage}</Text> : null}
-          {successMessage != null ? <Text color="$success">{successMessage}</Text> : null}
+          {errorMessage != null ? <Text color="$error" textAlign={rtlLayout.textAlign}>{errorMessage}</Text> : null}
 
           <Button onPress={() => void handleSave()} disabled={isSaving}>
             <ButtonText>
@@ -371,6 +370,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   coverImage: {
+    borderCurve: 'continuous',
     borderRadius: 16,
     height: 180,
     width: '100%',
@@ -378,6 +378,7 @@ const styles = StyleSheet.create({
   coverPlaceholder: {
     alignItems: 'center',
     borderColor: '#cbd5e1',
+    borderCurve: 'continuous',
     borderRadius: 16,
     borderStyle: 'dashed',
     borderWidth: 1,

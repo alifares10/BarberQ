@@ -1,3 +1,4 @@
+import { I18nManager } from 'react-native';
 import { Input as TamaguiInput } from 'tamagui';
 import type { GetProps } from 'tamagui';
 
@@ -8,6 +9,7 @@ export function Input(props: InputProps) {
     <TamaguiInput
       backgroundColor="$background"
       borderColor="$borderColor"
+      borderCurve="continuous"
       borderRadius="$4"
       borderWidth={1}
       color="$color"
@@ -15,6 +17,7 @@ export function Input(props: InputProps) {
       minHeight="$5"
       paddingHorizontal="$4"
       placeholderTextColor="$placeholderColor"
+      textAlign={I18nManager.isRTL ? 'right' : 'left'}
       {...props}
     />
   );

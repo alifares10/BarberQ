@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, ButtonText } from '@/components/Button/Button';
 import { Card } from '@/components/Card/Card';
 import { Input } from '@/components/Input/Input';
+import { StateCard } from '@/components/StateCard';
 import { Text } from '@/components/Text/Text';
 import {
   createBarberUnavailableDate,
@@ -413,12 +414,12 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.modalContentContainer}>
         <View style={styles.modalRoot}>
           {barber == null ? (
-            <Card>
-              <Text>{t('shopOwner.availability.errors.missingBarber')}</Text>
-              <Button onPress={handleClose}>
-                <ButtonText>{t('shopOwner.availability.actions.close')}</ButtonText>
-              </Button>
-            </Card>
+            <StateCard
+              actionLabel={t('shopOwner.availability.actions.close')}
+              description={t('shopOwner.availability.errors.missingBarber')}
+              onAction={handleClose}
+              variant="error"
+            />
           ) : isLoadingAvailabilityData ? (
             <>
               <Card>
@@ -428,9 +429,7 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
                 <Text color="$colorMuted">{t('shopOwner.availability.subtitle', { name: barber.name })}</Text>
               </Card>
 
-              <Card>
-                <Text color="$colorMuted">{t('shopOwner.availability.loadingData')}</Text>
-              </Card>
+              <StateCard description={t('shopOwner.availability.loadingData')} variant="loading" />
 
               <Button onPress={handleClose}>
                 <ButtonText>{t('shopOwner.availability.actions.close')}</ButtonText>
@@ -445,12 +444,12 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
                 <Text color="$colorMuted">{t('shopOwner.availability.subtitle', { name: barber.name })}</Text>
               </Card>
 
-              <Card>
-                <Text color="$error">{t('shopOwner.availability.loadError')}</Text>
-                <Button onPress={() => void handleRetryLoad()}>
-                  <ButtonText>{t('shopOwner.availability.retryButton')}</ButtonText>
-                </Button>
-              </Card>
+              <StateCard
+                actionLabel={t('shopOwner.availability.retryButton')}
+                description={t('shopOwner.availability.loadError')}
+                onAction={() => void handleRetryLoad()}
+                variant="error"
+              />
 
               <Button onPress={handleClose}>
                 <ButtonText>{t('shopOwner.availability.actions.close')}</ButtonText>
@@ -534,9 +533,11 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
 
                 <FlashList
                   ListEmptyComponent={
-                    <Card>
-                      <Text color="$colorMuted">{t('shopOwner.availability.emptyWorkingHours')}</Text>
-                    </Card>
+                    <StateCard
+                      description={t('shopOwner.availability.emptyWorkingHours')}
+                      framed={false}
+                      variant="empty"
+                    />
                   }
                   contentContainerStyle={styles.listContent}
                   data={barberWorkingHours}
@@ -595,9 +596,11 @@ export function BarberAvailabilityModal({ barber, onClose, shopId, visible }: Ba
 
                 <FlashList
                   ListEmptyComponent={
-                    <Card>
-                      <Text color="$colorMuted">{t('shopOwner.availability.emptyUnavailableDates')}</Text>
-                    </Card>
+                    <StateCard
+                      description={t('shopOwner.availability.emptyUnavailableDates')}
+                      framed={false}
+                      variant="empty"
+                    />
                   }
                   contentContainerStyle={styles.listContent}
                   data={barberUnavailableDates}
@@ -630,6 +633,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f8fafc',
     borderColor: '#cbd5e1',
+    borderCurve: 'continuous',
     borderRadius: 999,
     borderWidth: 1,
     minWidth: 44,

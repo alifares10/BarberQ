@@ -1,5 +1,6 @@
-import { I18nManager } from 'react-native';
+import { I18nManager, Platform } from 'react-native';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getLocales } from 'expo-localization';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
@@ -17,7 +18,13 @@ const resources = {
   },
 } as const;
 
-function resolveLanguage(): AppLanguage {
+const LANGUAGE_STORAGE_KEY = 'barberq.language';
+
+function isSupportedLanguage(language: string | null): language is AppLanguage {
+  return appConfig.supportedLanguages.includes(language as AppLanguage);
+}
+
+function resolveDeviceLanguage(): AppLanguage {
   const locale = getLocales()[0]?.languageCode;
 
   if (locale === 'he') {
@@ -25,6 +32,35 @@ function resolveLanguage(): AppLanguage {
   }
 
   return appConfig.defaultLanguage;
+}
+
+export async function getStoredLanguage() {
+  if (Platform.OS === 'web' && typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const storedLanguage = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
+
+    return isSupportedLanguage(storedLanguage) ? storedLanguage : null;
+  } catch (error) {
+    console.error('Failed to read stored language preference', error);
+    return null;
+  }
+}
+
+export async function saveStoredLanguage(language: AppLanguage) {
+  if (Platform.OS === 'web' && typeof window === 'undefined') {
+    return;
+  }
+
+  await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+}
+
+export async function resolveInitialLanguage(): Promise<AppLanguage> {
+  const storedLanguage = await getStoredLanguage();
+
+  return storedLanguage ?? resolveDeviceLanguage();
 }
 
 export function isRtlLanguage(language: string) {
@@ -41,18 +77,47 @@ export function syncRtlDirection(language: string) {
   }
 }
 
-const initialLanguage = resolveLanguage();
+export async function changeAppLanguage(language: AppLanguage) {
+  const requiresRestart = I18nManager.isRTL !== isRtlLanguage(language);
 
-syncRtlDirection(initialLanguage);
+  await saveStoredLanguage(language);
+  syncRtlDirection(language);
+  await i18n.changeLanguage(language);
 
-void i18n.use(initReactI18next).init({
-  compatibilityJSON: 'v4',
-  fallbackLng: appConfig.defaultLanguage,
-  interpolation: {
-    escapeValue: false,
-  },
-  lng: initialLanguage,
-  resources,
-});
+  return { requiresRestart };
+}
+
+let initPromise: Promise<AppLanguage> | null = null;
+
+export function initI18n() {
+  if (initPromise != null) {
+    return initPromise;
+  }
+
+  initPromise = resolveInitialLanguage().then(async (initialLanguage) => {
+    syncRtlDirection(initialLanguage);
+
+    if (i18n.isInitialized) {
+      await i18n.changeLanguage(initialLanguage);
+      return initialLanguage;
+    }
+
+    await i18n.use(initReactI18next).init({
+      compatibilityJSON: 'v4',
+      fallbackLng: appConfig.defaultLanguage,
+      interpolation: {
+        escapeValue: false,
+      },
+      lng: initialLanguage,
+      resources,
+    });
+
+    return initialLanguage;
+  });
+
+  return initPromise;
+}
+
+export const i18nReady = initI18n();
 
 export default i18n;

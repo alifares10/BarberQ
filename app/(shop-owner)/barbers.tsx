@@ -7,7 +7,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { BarberAvailabilityModal, Button, ButtonText, Card, Input, LoadingScreen, Text } from '@/components';
+import { BarberAvailabilityModal, Button, ButtonText, Card, Input, LoadingScreen, StateCard, Text } from '@/components';
 import {
   createBarber,
   createService,
@@ -599,15 +599,13 @@ export default function BarbersScreen() {
   if (shopQuery.data == null) {
     return (
       <View style={styles.screen}>
-        <Card>
-          <Text fontFamily="$heading" fontSize={26} fontWeight="800" lineHeight={32}>
-            {t('shopOwner.managementHub.missingShopTitle')}
-          </Text>
-          <Text color="$colorMuted">{t('shopOwner.managementHub.missingShopDescription')}</Text>
-          <Button onPress={() => router.push('/(shop-owner)/shop')}>
-            <ButtonText>{t('shopOwner.managementHub.goToShopButton')}</ButtonText>
-          </Button>
-        </Card>
+        <StateCard
+          actionLabel={t('shopOwner.managementHub.goToShopButton')}
+          description={t('shopOwner.managementHub.missingShopDescription')}
+          onAction={() => router.push('/(shop-owner)/shop')}
+          title={t('shopOwner.managementHub.missingShopTitle')}
+          variant="info"
+        />
       </View>
     );
   }
@@ -615,12 +613,12 @@ export default function BarbersScreen() {
   if (hasHubQueryError) {
     return (
       <View style={styles.screen}>
-        <Card>
-          <Text color="$error">{t('shopOwner.managementHub.loadError')}</Text>
-          <Button onPress={() => void handleRetryLoad()}>
-            <ButtonText>{t('shopOwner.managementHub.retryButton')}</ButtonText>
-          </Button>
-        </Card>
+        <StateCard
+          actionLabel={t('shopOwner.managementHub.retryButton')}
+          description={t('shopOwner.managementHub.loadError')}
+          onAction={() => void handleRetryLoad()}
+          variant="error"
+        />
       </View>
     );
   }
@@ -656,9 +654,7 @@ export default function BarbersScreen() {
       {activeTab === 'barbers' ? (
         <FlashList
           ListEmptyComponent={
-            <Card>
-              <Text color="$colorMuted">{t('shopOwner.managementHub.emptyBarbers')}</Text>
-            </Card>
+            <StateCard description={t('shopOwner.managementHub.emptyBarbers')} variant="empty" />
           }
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={styles.listContainer}
@@ -670,9 +666,7 @@ export default function BarbersScreen() {
       ) : (
         <FlashList
           ListEmptyComponent={
-            <Card>
-              <Text color="$colorMuted">{t('shopOwner.managementHub.emptyServices')}</Text>
-            </Card>
+            <StateCard description={t('shopOwner.managementHub.emptyServices')} variant="empty" />
           }
           contentInsetAdjustmentBehavior="automatic"
           contentContainerStyle={styles.listContainer}
@@ -893,6 +887,7 @@ export default function BarbersScreen() {
 const styles = StyleSheet.create({
   assignmentItem: {
     borderColor: '#e2e8f0',
+    borderCurve: 'continuous',
     borderRadius: 16,
     borderWidth: 1,
     gap: 4,
@@ -907,6 +902,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   avatarImage: {
+    borderCurve: 'continuous',
     borderRadius: 28,
     height: 56,
     width: 56,
@@ -915,6 +911,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f1f5f9',
     borderColor: '#cbd5e1',
+    borderCurve: 'continuous',
     borderRadius: 28,
     borderWidth: 1,
     height: 56,
@@ -922,6 +919,7 @@ const styles = StyleSheet.create({
     width: 56,
   },
   avatarPreview: {
+    borderCurve: 'continuous',
     borderRadius: 16,
     height: 120,
     width: 120,

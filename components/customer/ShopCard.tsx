@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/Card/Card';
 import { Text } from '@/components/Text/Text';
+import { getRtlLayout } from '@/lib/rtl';
 
 const DEFAULT_BLURHASH = 'L6Pj0^i_.AyE_3t7t7R**0o#DgR4';
 
@@ -17,6 +18,8 @@ type ShopCardProps = {
 };
 
 export const ShopCard = memo(function ShopCard({ address, coverImageUrl, distance, name, onPress, shopId }: ShopCardProps) {
+  const rtlLayout = getRtlLayout();
+
   return (
     <Pressable onPress={() => onPress(shopId)}>
       <Card>
@@ -36,10 +39,10 @@ export const ShopCard = memo(function ShopCard({ address, coverImageUrl, distanc
           )}
         </View>
 
-        <View style={styles.content}>
-          <Text fontWeight="700">{name}</Text>
-          <Text color="$colorMuted">{address}</Text>
-          {distance != null ? <Text color="$colorMuted">{distance}</Text> : null}
+        <View style={[styles.content, { alignItems: rtlLayout.leadingAlignItems }]}>
+          <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{name}</Text>
+          <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{address}</Text>
+          {distance != null ? <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{distance}</Text> : null}
         </View>
       </Card>
     </Pressable>

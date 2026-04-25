@@ -1,7 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
-import { YStack } from 'tamagui';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button, ButtonText } from '@/components/Button/Button';
 import { Card } from '@/components/Card/Card';
@@ -23,8 +22,8 @@ export function PlaceholderScreen({ actions, description, title }: PlaceholderSc
   const { t } = useTranslation();
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack backgroundColor="$background" flex={1} gap="$5" justifyContent="center" padding="$5">
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.contentContainer}>
+      <View style={styles.container}>
         <Card>
           <Text fontFamily="$heading" fontSize={30} fontWeight="800" lineHeight={36}>
             {title}
@@ -35,16 +34,31 @@ export function PlaceholderScreen({ actions, description, title }: PlaceholderSc
         {actions != null ? (
           <Card backgroundColor="$cardMuted">
             <Text fontWeight="700">{t('common.nextSteps')}</Text>
-            <YStack gap="$3">
+            <View style={styles.actions}>
               {actions.map((action) => (
                 <Button key={action.label} onPress={() => router.push(action.href)}>
                   <ButtonText>{action.label}</ButtonText>
                 </Button>
               ))}
-            </YStack>
+            </View>
           </Card>
         ) : null}
-      </YStack>
+      </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  actions: {
+    gap: 12,
+  },
+  container: {
+    flex: 1,
+    gap: 20,
+    justifyContent: 'center',
+    padding: 20,
+  },
+  contentContainer: {
+    flexGrow: 1,
+  },
+});

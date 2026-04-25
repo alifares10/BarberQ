@@ -5,7 +5,8 @@ import { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button, ButtonText, Card, LoadingScreen, Text } from '@/components';
+import { Card, LoadingScreen, StateCard, Text } from '@/components';
+import { getRtlLayout } from '@/lib/rtl';
 import { fetchShopAppointmentsByDateRange, fetchShopByOwnerId, type ShopAppointment } from '@/lib/shop-owner/api';
 import { getDashboardStats, normalizeTime, toIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
@@ -26,21 +27,23 @@ const AppointmentItem = memo(function AppointmentItem({
   rangeText,
   statusText,
 }: AppointmentItemProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
 
   return (
     <Card>
-      <Text fontWeight="700">{rangeText}</Text>
-      <Text color="$colorMuted">{t('shopOwner.dashboard.itemBarber', { barber: barberName })}</Text>
-      <Text color="$colorMuted">{t('shopOwner.dashboard.itemCustomer', { customer: customerName })}</Text>
-      <Text color="$colorMuted">{t('shopOwner.dashboard.itemStatus', { status: statusText })}</Text>
-      {notes != null && notes.trim().length > 0 ? <Text color="$colorMuted">{notes}</Text> : null}
+      <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{rangeText}</Text>
+      <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.itemBarber', { barber: barberName })}</Text>
+      <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.itemCustomer', { customer: customerName })}</Text>
+      <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.itemStatus', { status: statusText })}</Text>
+      {notes != null && notes.trim().length > 0 ? <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{notes}</Text> : null}
     </Card>
   );
 });
 
 export default function DashboardScreen() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
   const router = useRouter();
   const session = useAuthStore((state) => state.session);
   const ownerId = session?.user.id ?? null;
@@ -117,67 +120,65 @@ export default function DashboardScreen() {
       <FlashList
         ListEmptyComponent={
           shopId != null && !appointmentsQuery.isError ? (
-            <Card>
-              <Text color="$colorMuted">{t('shopOwner.dashboard.empty')}</Text>
-            </Card>
+            <StateCard description={t('shopOwner.dashboard.empty')} variant="empty" />
           ) : null
         }
         ListHeaderComponent={
           <View style={styles.headerContent}>
             <Card>
-              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
+              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
                 {t('shopOwner.dashboard.title')}
               </Text>
-              <Text color="$colorMuted">{t('shopOwner.dashboard.description')}</Text>
+              <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.description')}</Text>
             </Card>
 
             {shopId == null ? (
-              <Card>
-                <Text fontWeight="700">{t('shopOwner.dashboard.missingShopTitle')}</Text>
-                <Text color="$colorMuted">{t('shopOwner.dashboard.missingShopDescription')}</Text>
-                <Button onPress={() => router.push('/(shop-owner)/shop')}>
-                  <ButtonText>{t('shopOwner.dashboard.goToShopButton')}</ButtonText>
-                </Button>
-              </Card>
+              <StateCard
+                actionLabel={t('shopOwner.dashboard.goToShopButton')}
+                description={t('shopOwner.dashboard.missingShopDescription')}
+                onAction={() => router.push('/(shop-owner)/shop')}
+                title={t('shopOwner.dashboard.missingShopTitle')}
+                variant="info"
+              />
             ) : null}
 
             {appointmentsQuery.isError ? (
-              <Card>
-                <Text color="$error">{t('shopOwner.dashboard.loadError')}</Text>
-                <Button onPress={() => void appointmentsQuery.refetch()}>
-                  <ButtonText>{t('shopOwner.dashboard.retryButton')}</ButtonText>
-                </Button>
-              </Card>
+              <StateCard
+                actionLabel={t('shopOwner.dashboard.retryButton')}
+                description={t('shopOwner.dashboard.loadError')}
+                onAction={() => void appointmentsQuery.refetch()}
+                variant="error"
+              />
             ) : null}
 
             {shopId != null && !appointmentsQuery.isError ? (
               <>
-                <View style={styles.statsRow}>
+                <View style={[styles.statsRow, { flexDirection: rtlLayout.rowDirection }]}>
                   <Card style={styles.statCard}>
-                    <Text fontWeight="700">{t('shopOwner.dashboard.stats.total')}</Text>
-                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
+                    <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.stats.total')}</Text>
+                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
                       {stats.total}
                     </Text>
                   </Card>
 
                   <Card style={styles.statCard}>
-                    <Text fontWeight="700">{t('shopOwner.dashboard.stats.upcoming')}</Text>
-                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
+                    <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.stats.upcoming')}</Text>
+                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
                       {stats.upcoming}
                     </Text>
                   </Card>
 
                   <Card style={styles.statCard}>
-                    <Text fontWeight="700">{t('shopOwner.dashboard.stats.cancelled')}</Text>
-                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
+                    <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.stats.cancelled')}</Text>
+                    <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
                       {stats.cancelled}
                     </Text>
                   </Card>
                 </View>
 
                 <Card>
-                  <Text fontWeight="700">{t('shopOwner.dashboard.todaySectionTitle')}</Text>
-                  <Text color="$colorMuted">{t('shopOwner.dashboard.todaySectionSubtitle')}</Text>
+                  <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.todaySectionTitle')}</Text>
+                  <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.dashboard.todaySectionSubtitle')}</Text>
                 </Card>
               </>
             ) : null}
@@ -211,7 +212,6 @@ const styles = StyleSheet.create({
     minWidth: 96,
   },
   statsRow: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },

@@ -101,14 +101,14 @@ Full design spec & root plan: `plan.md`
 
 ## Phase 7: Polish & RTL
 
-- [ ] 1. **RTL testing** — verify all screens render correctly in Hebrew
-- [ ] 2. **Language toggle** — in Profile screen, switch language and flip RTL
-- [ ] 3. **Loading states** — skeleton screens for lists and maps
-- [ ] 4. **Error handling** — toast notifications for failures (booking conflicts, network errors)
-- [ ] 5. **Empty states** — friendly messages when no shops nearby, no bookings, etc.
-- [ ] 6. **Safe areas** — use `contentInsetAdjustmentBehavior="automatic"` on all ScrollViews, no SafeAreaView wrappers
-- [ ] 7. **Styling audit** — ensure `borderCurve: 'continuous'` on all rounded corners, `gap` for spacing, CSS `boxShadow` syntax
-- [ ] **Phase 7 verified** (lint, type check, tests, build)
+- [x] 1. **RTL testing** — verify all screens render correctly in Hebrew
+- [x] 2. **Language toggle** — in Profile screen, switch language and flip RTL
+- [x] 3. **Loading states** — skeleton screens for lists and maps
+- [x] 4. **Error handling** — toast notifications for failures (booking conflicts, network errors)
+- [x] 5. **Empty states** — friendly messages when no shops nearby, no bookings, etc.
+- [x] 6. **Safe areas** — use `contentInsetAdjustmentBehavior="automatic"` on all ScrollViews, no SafeAreaView wrappers
+- [x] 7. **Styling audit** — ensure `borderCurve: 'continuous'` on all rounded corners, `gap` for spacing, CSS `boxShadow` syntax
+- [x] **Phase 7 verified** (lint, type check, tests, build)
 
 ---
 

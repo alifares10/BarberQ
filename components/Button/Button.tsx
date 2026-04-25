@@ -5,6 +5,7 @@ import type { GetProps } from 'tamagui';
 const ButtonFrame = styled(TamaguiButton, {
   alignItems: 'center',
   backgroundColor: '$primary',
+  borderCurve: 'continuous',
   borderRadius: '$4',
   borderWidth: 0,
   gap: '$2',

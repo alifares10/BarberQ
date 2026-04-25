@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { AuthScreen, Button, ButtonText, Input, Text } from '@/components';
+import { AuthScreen, Button, ButtonText, Input, Text, useToast } from '@/components';
 import { sendOtp, verifyOtp } from '@/lib/auth/api';
 import { maskPhoneNumber } from '@/lib/auth/phone';
 import { getOnboardingRoute } from '@/lib/auth/routing';
@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/auth-store';
 
 export default function OtpScreen() {
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const router = useRouter();
   const clearOnboardingDraft = useAuthStore((state) => state.clearOnboardingDraft);
   const pendingPhone = useAuthStore((state) => state.pendingPhone);
@@ -84,10 +85,12 @@ export default function OtpScreen() {
       const result = await resendOtpMutation.mutateAsync(pendingPhone);
 
       setResendIn(result.retryAfterSeconds);
+      showToast({ message: t('toast.otpResent'), type: 'success' });
     } catch (error) {
       const message = error instanceof Error ? error.message : t('auth.errors.generic');
 
       setErrorMessage(message);
+      showToast({ message: t('toast.otpResendFailed'), type: 'error' });
     }
   };
 

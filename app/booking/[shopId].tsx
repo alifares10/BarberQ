@@ -7,9 +7,10 @@ import { memo, useCallback, useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button, ButtonText, Card, LoadingScreen, Text } from '@/components';
+import { Card, LoadingScreen, StateCard, Text } from '@/components';
 import { fetchActiveBarbersByShopId, fetchShopById } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
+import { getRtlLayout } from '@/lib/rtl';
 import { useBookingStore } from '@/stores/booking-store';
 import type { Database } from '@/types/database';
 
@@ -26,12 +27,13 @@ type BarberRowProps = {
 };
 
 const BarberRow = memo(function BarberRow({ avatarUrl, barberId, bio, name, onSelect }: BarberRowProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
 
   return (
     <Pressable onPress={() => onSelect(barberId)}>
       <Card>
-        <View style={styles.barberRowHeader}>
+        <View style={[styles.barberRowHeader, { flexDirection: rtlLayout.rowDirection }]}>
           {avatarUrl != null ? (
             <Image
               contentFit="cover"
@@ -46,9 +48,9 @@ const BarberRow = memo(function BarberRow({ avatarUrl, barberId, bio, name, onSe
             </View>
           )}
 
-          <View style={styles.grow}>
-            <Text fontWeight="700">{name}</Text>
-            <Text color="$colorMuted">{bio != null && bio.trim().length > 0 ? bio : t('customer.shopDetail.missingBio')}</Text>
+          <View style={[styles.grow, { alignItems: rtlLayout.leadingAlignItems }]}>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{name}</Text>
+            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{bio != null && bio.trim().length > 0 ? bio : t('customer.shopDetail.missingBio')}</Text>
           </View>
         </View>
       </Card>
@@ -57,7 +59,8 @@ const BarberRow = memo(function BarberRow({ avatarUrl, barberId, bio, name, onSe
 });
 
 export default function ShopDetailScreen() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
   const router = useRouter();
   const setNotes = useBookingStore((state) => state.setNotes);
   const setSelectedBarberId = useBookingStore((state) => state.setSelectedBarberId);
@@ -134,9 +137,7 @@ export default function ShopDetailScreen() {
   if (shopId.length === 0) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.shopDetail.invalidShop')}</Text>
-        </Card>
+        <StateCard description={t('customer.shopDetail.invalidShop')} variant="error" />
       </View>
     );
   }
@@ -148,15 +149,15 @@ export default function ShopDetailScreen() {
   if (shopQuery.isError || barbersQuery.isError) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.shopDetail.loadError')}</Text>
-          <Button onPress={() => {
+        <StateCard
+          actionLabel={t('customer.shopDetail.retryButton')}
+          description={t('customer.shopDetail.loadError')}
+          onAction={() => {
             void shopQuery.refetch();
             void barbersQuery.refetch();
-          }}>
-            <ButtonText>{t('customer.shopDetail.retryButton')}</ButtonText>
-          </Button>
-        </Card>
+          }}
+          variant="error"
+        />
       </View>
     );
   }
@@ -164,9 +165,7 @@ export default function ShopDetailScreen() {
   if (shop == null) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.shopDetail.invalidShop')}</Text>
-        </Card>
+        <StateCard description={t('customer.shopDetail.invalidShop')} variant="error" />
       </View>
     );
   }
@@ -175,9 +174,7 @@ export default function ShopDetailScreen() {
     <View style={styles.screen}>
       <FlashList
         ListEmptyComponent={
-          <Card>
-            <Text color="$colorMuted">{t('customer.shopDetail.emptyBarbers')}</Text>
-          </Card>
+          <StateCard description={t('customer.shopDetail.emptyBarbers')} variant="empty" />
         }
         ListHeaderComponent={
           <View style={styles.headerContent}>
@@ -198,29 +195,29 @@ export default function ShopDetailScreen() {
                 )}
               </View>
 
-              <Text fontFamily="$heading" fontSize={30} fontWeight="800" lineHeight={36}>
+              <Text fontFamily="$heading" fontSize={30} fontWeight="800" lineHeight={36} textAlign={rtlLayout.textAlign}>
                 {shop.name}
               </Text>
-              <Text color="$colorMuted">{shop.description != null && shop.description.trim().length > 0 ? shop.description : t('customer.shopDetail.description')}</Text>
+              <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{shop.description != null && shop.description.trim().length > 0 ? shop.description : t('customer.shopDetail.description')}</Text>
               <Pressable onPress={handleOpenAddress} style={styles.detailPill}>
-                <Text color="$colorMuted">{shop.address}</Text>
+                <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{shop.address}</Text>
               </Pressable>
               <Pressable onPress={handleCallShop} style={styles.detailPill}>
-                <Text color="$colorMuted">{shop.phone}</Text>
+                <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{shop.phone}</Text>
               </Pressable>
 
-              <View style={styles.actionsRow}>
+              <View style={[styles.actionsRow, { flexDirection: rtlLayout.rowDirection }]}>
                 <Pressable onPress={handleOpenAddress} style={styles.actionChip}>
-                  <Text color="$inverseColor">{t('customer.shopDetail.openInMapsButton')}</Text>
+                  <Text color="$inverseColor" textAlign="center">{t('customer.shopDetail.openInMapsButton')}</Text>
                 </Pressable>
                 <Pressable onPress={handleCallShop} style={styles.actionChipSecondary}>
-                  <Text color="$colorMuted">{t('customer.shopDetail.callShopButton')}</Text>
+                  <Text color="$colorMuted" textAlign="center">{t('customer.shopDetail.callShopButton')}</Text>
                 </Pressable>
               </View>
             </Card>
 
             <Card>
-              <Text fontWeight="700">{t('customer.shopDetail.barbersTitle')}</Text>
+              <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('customer.shopDetail.barbersTitle')}</Text>
             </Card>
           </View>
         }
@@ -251,7 +248,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   actionsRow: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
   },
@@ -271,7 +267,6 @@ const styles = StyleSheet.create({
     width: 56,
   },
   barberRowHeader: {
-    flexDirection: 'row',
     gap: 12,
   },
   coverContainer: {

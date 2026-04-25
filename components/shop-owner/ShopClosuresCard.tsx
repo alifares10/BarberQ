@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, ButtonText } from '@/components/Button/Button';
 import { Card } from '@/components/Card/Card';
 import { Input } from '@/components/Input/Input';
+import { StateCard } from '@/components/StateCard';
 import { Text } from '@/components/Text/Text';
 import {
   createShopClosure,
@@ -14,6 +15,7 @@ import {
   fetchShopClosures,
   updateShopClosure,
 } from '@/lib/shop-owner/api';
+import { getRtlLayout } from '@/lib/rtl';
 import { shopOwnerQueryKeys } from '@/lib/shop-owner/query-keys';
 import type { Database } from '@/types/database';
 
@@ -36,7 +38,8 @@ function isValidDateInput(value: string) {
 }
 
 export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
+  const rtlLayout = getRtlLayout(i18n.language);
   const queryClient = useQueryClient();
   const [isModalVisible, setModalVisible] = useState(false);
   const [closureId, setClosureId] = useState<string | null>(null);
@@ -135,14 +138,14 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
   const renderClosureItem = useCallback(
     ({ item }: { item: ShopClosure }) => (
       <Card>
-        <Text fontWeight="700">{item.date}</Text>
-        <Text color="$colorMuted">
+        <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{item.date}</Text>
+        <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
           {item.reason == null || item.reason.length === 0
             ? t('shopOwner.shopClosures.noReason')
             : item.reason}
         </Text>
 
-        <View style={styles.actionRow}>
+        <View style={[styles.actionRow, { flexDirection: rtlLayout.rowDirection }]}>
           <Button onPress={() => handleEdit(item)}>
             <ButtonText>{t('shopOwner.shopClosures.actions.edit')}</ButtonText>
           </Button>
@@ -152,26 +155,27 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
         </View>
       </Card>
     ),
-    [handleDelete, handleEdit, t]
+    [handleDelete, handleEdit, rtlLayout.rowDirection, rtlLayout.textAlign, t]
   );
 
   return (
     <>
       <Card>
-        <Text fontWeight="700">{t('shopOwner.shopClosures.cardTitle')}</Text>
-        <Text color="$colorMuted">{t('shopOwner.shopClosures.cardDescription')}</Text>
+        <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopClosures.cardTitle')}</Text>
+        <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopClosures.cardDescription')}</Text>
 
         {shopId == null ? (
-          <Text color="$colorMuted">{t('shopOwner.shopClosures.requiresShop')}</Text>
+          <StateCard description={t('shopOwner.shopClosures.requiresShop')} framed={false} variant="info" />
         ) : closuresQuery.isError ? (
-          <>
-            <Text color="$error">{t('shopOwner.shopClosures.loadError')}</Text>
-            <Button onPress={() => void handleRetryLoad()}>
-              <ButtonText>{t('shopOwner.shopClosures.retryButton')}</ButtonText>
-            </Button>
-          </>
+          <StateCard
+            actionLabel={t('shopOwner.shopClosures.retryButton')}
+            description={t('shopOwner.shopClosures.loadError')}
+            framed={false}
+            onAction={() => void handleRetryLoad()}
+            variant="error"
+          />
         ) : closuresQuery.isPending ? (
-          <Text color="$colorMuted">{t('shopOwner.shopClosures.loadingData')}</Text>
+          <StateCard description={t('shopOwner.shopClosures.loadingData')} framed={false} variant="loading" />
         ) : (
           <Button onPress={() => setModalVisible(true)}>
             <ButtonText>{t('shopOwner.shopClosures.manageButton')}</ButtonText>
@@ -181,13 +185,13 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
 
       <Modal animationType="slide" presentationStyle="formSheet" visible={isModalVisible} onRequestClose={handleClose}>
         <View style={styles.modalRoot}>
-          <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
+          <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30} textAlign={rtlLayout.textAlign}>
             {t('shopOwner.shopClosures.title')}
           </Text>
-          <Text color="$colorMuted">{t('shopOwner.shopClosures.description')}</Text>
+          <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopClosures.description')}</Text>
 
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopClosures.dateLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopClosures.dateLabel')}</Text>
             <Input
               autoCapitalize="none"
               onChangeText={setDate}
@@ -197,7 +201,7 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
           </View>
 
           <View style={styles.fieldGroup}>
-            <Text fontWeight="700">{t('shopOwner.shopClosures.reasonLabel')}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{t('shopOwner.shopClosures.reasonLabel')}</Text>
             <Input
               autoCapitalize="sentences"
               onChangeText={setReason}
@@ -206,9 +210,9 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
             />
           </View>
 
-          {errorMessage != null ? <Text color="$error">{errorMessage}</Text> : null}
+          {errorMessage != null ? <Text color="$error" textAlign={rtlLayout.textAlign}>{errorMessage}</Text> : null}
 
-          <View style={styles.actionRow}>
+          <View style={[styles.actionRow, { flexDirection: rtlLayout.rowDirection }]}>
             <Button onPress={() => void handleSave()}>
               <ButtonText>
                 {saveClosureMutation.isPending
@@ -232,22 +236,18 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
           </View>
 
           {closuresQuery.isError ? (
-            <Card>
-              <Text color="$error">{t('shopOwner.shopClosures.loadError')}</Text>
-              <Button onPress={() => void handleRetryLoad()}>
-                <ButtonText>{t('shopOwner.shopClosures.retryButton')}</ButtonText>
-              </Button>
-            </Card>
+            <StateCard
+              actionLabel={t('shopOwner.shopClosures.retryButton')}
+              description={t('shopOwner.shopClosures.loadError')}
+              onAction={() => void handleRetryLoad()}
+              variant="error"
+            />
           ) : closuresQuery.isPending ? (
-            <Card>
-              <Text color="$colorMuted">{t('shopOwner.shopClosures.loadingData')}</Text>
-            </Card>
+            <StateCard description={t('shopOwner.shopClosures.loadingData')} variant="loading" />
           ) : (
             <FlashList
               ListEmptyComponent={
-                <Card>
-                  <Text color="$colorMuted">{t('shopOwner.shopClosures.empty')}</Text>
-                </Card>
+                <StateCard description={t('shopOwner.shopClosures.empty')} variant="empty" />
               }
               contentContainerStyle={styles.listContent}
               data={closures}
@@ -265,7 +265,6 @@ export function ShopClosuresCard({ shopId }: ShopClosuresCardProps) {
 
 const styles = StyleSheet.create({
   actionRow: {
-    flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },

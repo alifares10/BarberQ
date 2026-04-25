@@ -4,10 +4,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { AppointmentCard, Button, ButtonText, Card, LoadingScreen, Text } from '@/components';
+import { AppointmentCard, Card, LoadingScreen, StateCard, Text, useToast } from '@/components';
 import { cancelAppointment, fetchCustomerAppointments, type CustomerAppointment } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { notifyBookingCancelled } from '@/lib/push/notify-booking';
+import { getRtlLayout } from '@/lib/rtl';
 import { normalizeTime, parseIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -42,6 +43,8 @@ function toAppointmentDateTime(dateValue: string, timeValue: string) {
 
 export default function CustomerBookingsScreen() {
   const { i18n, t } = useTranslation();
+  const { showToast } = useToast();
+  const rtlLayout = getRtlLayout(i18n.language);
   const queryClient = useQueryClient();
   const session = useAuthStore((state) => state.session);
   const customerId = session?.user.id ?? null;
@@ -204,13 +207,15 @@ export default function CustomerBookingsScreen() {
 
       try {
         await cancelMutation.mutateAsync(appointmentId);
+        showToast({ message: t('toast.bookingCancelled'), type: 'success' });
       } catch {
         setCancelError(t('customer.bookings.cancelError'));
+        showToast({ message: t('customer.bookings.cancelError'), type: 'error' });
       } finally {
         setCancelingAppointmentId(null);
       }
     },
-    [cancelMutation, t]
+    [cancelMutation, showToast, t]
   );
   const handleCancel = useCallback(
     (appointmentId: string) => {
@@ -236,7 +241,7 @@ export default function CustomerBookingsScreen() {
       if (item.type === 'header') {
         return (
           <View style={styles.sectionHeader}>
-            <Text fontWeight="700">{item.title}</Text>
+            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{item.title}</Text>
           </View>
         );
       }
@@ -259,15 +264,13 @@ export default function CustomerBookingsScreen() {
         />
       );
     },
-    [cancelingAppointmentId, handleCancel, t]
+    [cancelingAppointmentId, handleCancel, rtlLayout.textAlign, t]
   );
 
   if (customerId == null) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.bookings.missingSession')}</Text>
-        </Card>
+        <StateCard description={t('customer.bookings.missingSession')} variant="error" />
       </View>
     );
   }
@@ -279,12 +282,12 @@ export default function CustomerBookingsScreen() {
   if (appointmentsQuery.isError) {
     return (
       <View style={styles.errorContainer}>
-        <Card>
-          <Text color="$error">{t('customer.bookings.loadError')}</Text>
-          <Button onPress={() => void appointmentsQuery.refetch()}>
-            <ButtonText>{t('customer.bookings.retryButton')}</ButtonText>
-          </Button>
-        </Card>
+        <StateCard
+          actionLabel={t('customer.bookings.retryButton')}
+          description={t('customer.bookings.loadError')}
+          onAction={() => void appointmentsQuery.refetch()}
+          variant="error"
+        />
       </View>
     );
   }
@@ -293,22 +296,20 @@ export default function CustomerBookingsScreen() {
     <View style={styles.screen}>
       <FlashList
         ListEmptyComponent={
-          <Card>
-            <Text color="$colorMuted">{t('customer.bookings.empty')}</Text>
-          </Card>
+          <StateCard description={t('customer.bookings.empty')} variant="empty" />
         }
         ListHeaderComponent={
           <View style={styles.headerContent}>
             <Card>
-              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34}>
+              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
                 {t('customer.bookings.title')}
               </Text>
-              <Text color="$colorMuted">{t('customer.bookings.description')}</Text>
+              <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.bookings.description')}</Text>
             </Card>
 
             {cancelError != null ? (
               <Card>
-                <Text color="$error">{cancelError}</Text>
+                <Text color="$error" textAlign={rtlLayout.textAlign}>{cancelError}</Text>
               </Card>
             ) : null}
           </View>
