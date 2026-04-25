@@ -1,12 +1,18 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button, ButtonText, Card, LoadingScreen, Text } from '@/components';
-import { fetchShopAppointmentsByDateRange, fetchShopByOwnerId } from '@/lib/shop-owner/api';
+import { notifyBookingCancelled, notifyBookingConfirmed } from '@/lib/push/notify-booking';
+import {
+  fetchShopAppointmentsByDateRange,
+  fetchShopByOwnerId,
+  updateAppointmentStatus,
+  type AppointmentStatusUpdate,
+} from '@/lib/shop-owner/api';
 import {
   getRangeBounds,
   groupShopAppointmentsByDate,
@@ -34,46 +40,56 @@ type CalendarRow =
       id: string;
       notes: string | null;
       startTime: string;
+      status: string;
       statusText: string;
       type: 'appointment';
     };
 
 
 type AppointmentRowProps = {
+  appointmentId: string;
   barberName: string;
   customerName: string;
   notes: string | null;
+  onPress: (appointmentId: string) => void;
   statusText: string;
   timeRangeText: string;
 };
 
 const AppointmentRow = memo(function AppointmentRow({
+  appointmentId,
   barberName,
   customerName,
   notes,
+  onPress,
   statusText,
   timeRangeText,
 }: AppointmentRowProps) {
   const { t } = useTranslation();
 
   return (
-    <Card>
-      <Text fontWeight="700">{timeRangeText}</Text>
-      <Text color="$colorMuted">{t('shopOwner.calendar.itemBarber', { barber: barberName })}</Text>
-      <Text color="$colorMuted">{t('shopOwner.calendar.itemCustomer', { customer: customerName })}</Text>
-      <Text color="$colorMuted">{t('shopOwner.calendar.itemStatus', { status: statusText })}</Text>
-      {notes != null && notes.trim().length > 0 ? <Text color="$colorMuted">{notes}</Text> : null}
-    </Card>
+    <Pressable accessibilityRole="button" onPress={() => onPress(appointmentId)}>
+      <Card>
+        <Text fontWeight="700">{timeRangeText}</Text>
+        <Text color="$colorMuted">{t('shopOwner.calendar.itemBarber', { barber: barberName })}</Text>
+        <Text color="$colorMuted">{t('shopOwner.calendar.itemCustomer', { customer: customerName })}</Text>
+        <Text color="$colorMuted">{t('shopOwner.calendar.itemStatus', { status: statusText })}</Text>
+        {notes != null && notes.trim().length > 0 ? <Text color="$colorMuted">{notes}</Text> : null}
+      </Card>
+    </Pressable>
   );
 });
 
 export default function CalendarScreen() {
   const { i18n, t } = useTranslation();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const session = useAuthStore((state) => state.session);
   const ownerId = session?.user.id ?? null;
   const [mode, setMode] = useState<RangeMode>('week');
   const [anchorDate, setAnchorDate] = useState(() => startOfDay(new Date()));
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
+  const [statusUpdateError, setStatusUpdateError] = useState<string | null>(null);
   const monthFormatter = useMemo(
     () => new Intl.DateTimeFormat(i18n.language, { month: 'long', year: 'numeric' }),
     [i18n.language]
@@ -116,6 +132,21 @@ export default function CalendarScreen() {
         : ['shop-owner', 'appointments', 'unknown', 'range', startDateValue, endDateValue],
   });
   const appointments = useMemo(() => appointmentsQuery.data ?? [], [appointmentsQuery.data]);
+  const selectedAppointment = useMemo(
+    () => appointments.find((appointment) => appointment.id === selectedAppointmentId) ?? null,
+    [appointments, selectedAppointmentId]
+  );
+  const selectedAppointmentDateLabel = useMemo(
+    () => (selectedAppointment != null ? dayFormatter.format(parseIsoDate(selectedAppointment.appointment_date)) : ''),
+    [dayFormatter, selectedAppointment]
+  );
+  const selectedAppointmentTimeRange = useMemo(
+    () =>
+      selectedAppointment != null
+        ? `${normalizeTime(selectedAppointment.appointment_time)} - ${normalizeTime(selectedAppointment.end_time)}`
+        : '',
+    [selectedAppointment]
+  );
 
   const getStatusText = useCallback(
     (status: string) => {
@@ -159,6 +190,7 @@ export default function CalendarScreen() {
           id: `appointment-${appointment.id}`,
           notes: appointment.notes,
           startTime: normalizeTime(appointment.appointment_time),
+          status: appointment.status,
           statusText: getStatusText(appointment.status),
           type: 'appointment',
         });
@@ -174,6 +206,55 @@ export default function CalendarScreen() {
     },
     [mode]
   );
+  const handleOpenAppointment = useCallback((appointmentId: string) => {
+    setStatusUpdateError(null);
+    setSelectedAppointmentId(appointmentId);
+  }, []);
+  const handleCloseAppointment = useCallback(() => {
+    setStatusUpdateError(null);
+    setSelectedAppointmentId(null);
+  }, []);
+  const statusMutation = useMutation({
+    mutationFn: ({
+      appointmentId,
+      status,
+    }: {
+      appointmentId: string;
+      status: AppointmentStatusUpdate;
+    }) => updateAppointmentStatus(appointmentId, status),
+    onError: () => {
+      setStatusUpdateError(t('shopOwner.calendar.statusUpdateError'));
+    },
+    onSuccess: async (appointment, variables) => {
+      if (variables.status === 'confirmed') {
+        void notifyBookingConfirmed(appointment.id);
+      }
+
+      if (variables.status === 'cancelled') {
+        void notifyBookingCancelled(appointment.id, 'shop');
+      }
+
+      if (shopId != null) {
+        await queryClient.invalidateQueries({ queryKey: ['shop-owner', 'appointments', shopId] });
+      }
+
+      handleCloseAppointment();
+    },
+  });
+  const handleUpdateStatus = useCallback(
+    (status: AppointmentStatusUpdate) => {
+      if (selectedAppointment == null) {
+        return;
+      }
+
+      setStatusUpdateError(null);
+      statusMutation.mutate({
+        appointmentId: selectedAppointment.id,
+        status,
+      });
+    },
+    [selectedAppointment, statusMutation]
+  );
 
   const renderRow = useCallback<ListRenderItem<CalendarRow>>(
     ({ item }) => {
@@ -187,20 +268,27 @@ export default function CalendarScreen() {
 
       return (
         <AppointmentRow
+          appointmentId={item.appointmentId}
           barberName={item.barberName}
           customerName={item.customerName}
           notes={item.notes}
+          onPress={handleOpenAppointment}
           statusText={item.statusText}
           timeRangeText={`${item.startTime} - ${item.endTime}`}
         />
       );
     },
-    []
+    [handleOpenAppointment]
   );
 
   if (shopQuery.isPending || (shopId != null && appointmentsQuery.isPending)) {
     return <LoadingScreen />;
   }
+
+  const canConfirmSelectedAppointment = selectedAppointment?.status === 'pending';
+  const canCancelSelectedAppointment =
+    selectedAppointment?.status === 'pending' || selectedAppointment?.status === 'confirmed';
+  const pendingStatusUpdate = statusMutation.isPending ? (statusMutation.variables?.status ?? null) : null;
 
   return (
     <View style={styles.screen}>
@@ -279,6 +367,73 @@ export default function CalendarScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderRow}
       />
+
+      <Modal
+        animationType="slide"
+        onRequestClose={handleCloseAppointment}
+        presentationStyle="formSheet"
+        visible={selectedAppointment != null}
+      >
+        <View style={styles.modalScreen}>
+          <Card>
+            <Text fontFamily="$heading" fontSize={24} fontWeight="800" lineHeight={30}>
+              {t('shopOwner.calendar.appointmentDetailsTitle')}
+            </Text>
+
+            <Text color="$colorMuted">
+              {t('shopOwner.calendar.itemBarber', {
+                barber: selectedAppointment?.barber?.name ?? t('shopOwner.calendar.unknownBarber'),
+              })}
+            </Text>
+            <Text color="$colorMuted">
+              {t('shopOwner.calendar.itemCustomer', {
+                customer: selectedAppointment?.customer?.full_name ?? t('shopOwner.calendar.unknownCustomer'),
+              })}
+            </Text>
+            <Text color="$colorMuted">{selectedAppointmentDateLabel}</Text>
+            <Text color="$colorMuted">{selectedAppointmentTimeRange}</Text>
+            <Text color="$colorMuted">
+              {t('shopOwner.calendar.itemStatus', {
+                status:
+                  selectedAppointment != null
+                    ? getStatusText(selectedAppointment.status)
+                    : t('shopOwner.appointmentStatus.pending'),
+              })}
+            </Text>
+            {selectedAppointment?.notes != null && selectedAppointment.notes.trim().length > 0 ? (
+              <Text color="$colorMuted">{selectedAppointment.notes}</Text>
+            ) : null}
+
+            {statusUpdateError != null ? <Text color="$error">{statusUpdateError}</Text> : null}
+
+            <View style={styles.modalActions}>
+              {canConfirmSelectedAppointment ? (
+                <Button disabled={statusMutation.isPending} onPress={() => handleUpdateStatus('confirmed')}>
+                  <ButtonText>
+                    {pendingStatusUpdate === 'confirmed'
+                      ? t('shopOwner.calendar.confirmingButton')
+                      : t('shopOwner.calendar.confirmButton')}
+                  </ButtonText>
+                </Button>
+              ) : null}
+
+              {canCancelSelectedAppointment ? (
+                <Button disabled={statusMutation.isPending} onPress={() => handleUpdateStatus('cancelled')}>
+                  <ButtonText>
+                    {pendingStatusUpdate === 'cancelled'
+                      ? t('shopOwner.calendar.cancellingButton')
+                      : t('shopOwner.calendar.cancelButton')}
+                  </ButtonText>
+                </Button>
+              ) : null}
+
+              <Button disabled={statusMutation.isPending} onPress={handleCloseAppointment}>
+                <ButtonText>{t('shopOwner.calendar.closeButton')}</ButtonText>
+              </Button>
+            </View>
+          </Card>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -295,6 +450,14 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     paddingBottom: 24,
+  },
+  modalActions: {
+    gap: 8,
+  },
+  modalScreen: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 16,
   },
   modePill: {
     alignItems: 'center',

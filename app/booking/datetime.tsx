@@ -19,6 +19,7 @@ import {
 } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { generateAvailableSlots, minutesToTime, timeToMinutes } from '@/lib/customer/slot-helpers';
+import { notifyNewBooking } from '@/lib/push/notify-booking';
 import { addDays, parseIsoDate, toIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { useAuthStore } from '@/stores/auth-store';
 import { useBookingStore } from '@/stores/booking-store';
@@ -306,7 +307,9 @@ export default function BookingDateTimeScreen() {
 
       setSubmissionError(t('customer.datetime.errors.createFailed'));
     },
-    onSuccess: async () => {
+    onSuccess: async (appointment) => {
+      void notifyNewBooking(appointment.id);
+
       if (customerId != null) {
         await queryClient.invalidateQueries({ queryKey: customerQueryKeys.customerAppointments(customerId) });
       }

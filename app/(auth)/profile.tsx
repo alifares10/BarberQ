@@ -6,7 +6,9 @@ import { useTranslation } from 'react-i18next';
 
 import { AuthScreen, Button, ButtonText, Input, Text } from '@/components';
 import { createProfile } from '@/lib/auth/api';
-import { useAuthStore } from '@/stores/auth-store';
+import { registerPushToken } from '@/lib/push/register-push-token';
+import { getHomeRouteForRole } from '@/lib/auth/routing';
+import { useAuthStore, type ProfileRole } from '@/stores/auth-store';
 
 export default function ProfileSetupScreen() {
   const { i18n, t } = useTranslation();
@@ -45,8 +47,11 @@ export default function ProfileSetupScreen() {
       });
 
       setProfile(profile);
+      void registerPushToken(profile.id).catch((error) => {
+        console.error('Failed to register push token after profile setup', error);
+      });
       clearOnboardingDraft();
-      router.replace('/');
+      router.replace(getHomeRouteForRole(profile.role as ProfileRole));
     } catch (error) {
       const message = error instanceof Error ? error.message : t('auth.errors.generic');
 

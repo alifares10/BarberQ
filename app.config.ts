@@ -1,5 +1,7 @@
 import type { ExpoConfig } from 'expo/config';
 
+const easProjectId = process.env.EAS_PROJECT_ID;
+
 const config: ExpoConfig = {
   name: 'BarberQ',
   slug: 'barberq',
@@ -8,7 +10,22 @@ const config: ExpoConfig = {
   scheme: 'barberq',
   userInterfaceStyle: 'automatic',
   newArchEnabled: true,
-  plugins: ['expo-router', 'expo-localization'],
+  extra: {
+    eas: {
+      projectId: easProjectId,
+    },
+  },
+  plugins: [
+    'expo-router',
+    'expo-localization',
+    [
+      'expo-notifications',
+      {
+        color: '#111827',
+        defaultChannel: 'default',
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
   },

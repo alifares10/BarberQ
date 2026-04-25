@@ -47,7 +47,24 @@
     "title": "זרימת הזמנה"
   },
   "common": {
-    "nextSteps": "השלבים הבאים"
+    "nextSteps": "השלבים הבאים",
+    "signOutButton": "התנתקות",
+    "signingOutButton": "מתנתק..."
+  },
+  "notifications": {
+    "booking_cancelled_by_customer_body": "{{customerName}} ביטל/ה את התור בתאריך {{date}} בשעה {{time}}.",
+    "booking_cancelled_by_customer_title": "התור בוטל",
+    "booking_cancelled_by_shop_body": "התור שלכם ב{{shopName}} בתאריך {{date}} בשעה {{time}} בוטל.",
+    "booking_cancelled_by_shop_title": "התור בוטל",
+    "booking_confirmed_body": "התור שלכם ב{{shopName}} בתאריך {{date}} בשעה {{time}} אושר.",
+    "booking_confirmed_title": "התור אושר",
+    "new_booking_body": "{{customerName}} הזמין/ה תור לתאריך {{date}} בשעה {{time}}.",
+    "new_booking_title": "תור חדש",
+    "reminder_customer_body": "התור שלכם ב{{shopName}} מתחיל בעוד שעה ({{date}} בשעה {{time}}).",
+    "reminder_shop_owner_body": "ל{{customerName}} יש תור בעוד שעה ({{date}} בשעה {{time}}).",
+    "reminder_title": "תור קרוב",
+    "unknownCustomer": "לקוח",
+    "unknownShop": "המספרה"
   },
   "customer": {
     "bookingsDescription": "מסך זמני להזמנות קרובות והיסטוריית תורים.",
@@ -165,7 +182,11 @@
       "totalDuration": "משך כולל: {{minutes}} דק׳",
       "totalPrice": "סה״כ: ₪{{price}}"
     },
-    "profileDescription": "מסך זמני להגדרות חשבון ושפה.",
+    "profileAccountDescription": "התנתקו מהמכשיר הזה אחרי שמחיקת רישום ה-push שלו תושלם.",
+    "profileAccountTitle": "חשבון",
+    "profileDescription": "ניהול החשבון במכשיר הזה עד שמסך השפה יגיע בשלב הליטוש.",
+    "profileFallbackName": "חשבון לקוח",
+    "profileFallbackPhone": "אין מספר טלפון זמין",
     "profileTitle": "פרופיל"
   },
   "navigation": {
@@ -209,6 +230,12 @@
       "unknownCustomer": "לקוח לא ידוע"
     },
     "calendar": {
+      "appointmentDetailsTitle": "פרטי התור",
+      "cancelButton": "ביטול תור",
+      "cancellingButton": "מבטל...",
+      "closeButton": "סגירה",
+      "confirmButton": "אישור תור",
+      "confirmingButton": "מאשר...",
       "description": "צפייה בתורים לפי שבוע או חודש, מקובצים לפי יום.",
       "empty": "אין תורים בטווח שנבחר.",
       "goToShopButton": "מעבר להגדרת העסק",
@@ -223,6 +250,7 @@
       "previousButton": "הקודם",
       "rangeTitle": "טווח",
       "retryButton": "ניסיון חוזר",
+      "statusUpdateError": "לא ניתן לעדכן את התור כרגע.",
       "title": "יומן",
       "unknownBarber": "ספר לא ידוע",
       "unknownCustomer": "לקוח לא ידוע",
@@ -342,7 +370,11 @@
       "unavailableDatesTitle": "תאריכי אי-זמינות",
       "workingHoursTitle": "שעות עבודה"
     },
-    "profileDescription": "מסך זמני לפרופיל בעל העסק.",
+    "profileAccountDescription": "התנתקו מהמכשיר הזה אחרי שמחיקת רישום ה-push שלו תושלם.",
+    "profileAccountTitle": "חשבון",
+    "profileDescription": "ניהול חשבון בעל העסק במכשיר הזה עד שמסך השפה יגיע בשלב הליטוש.",
+    "profileFallbackName": "חשבון בעל עסק",
+    "profileFallbackPhone": "אין מספר טלפון זמין",
     "profileTitle": "פרופיל",
     "shopDescription": "מסך זמני לניהול פרטי העסק וההגדרות שלו.",
     "shopManagement": {

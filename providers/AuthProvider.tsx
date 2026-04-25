@@ -3,10 +3,12 @@ import type { PropsWithChildren } from 'react';
 import { useEffect, useRef } from 'react';
 
 import { fetchProfileByUserId } from '@/lib/auth/api';
+import { registerPushToken } from '@/lib/push/register-push-token';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/auth-store';
 
 export function AuthProvider({ children }: PropsWithChildren) {
+  const pushRegistrationUserIdRef = useRef<string | null>(null);
   const requestIdRef = useRef(0);
   const reset = useAuthStore((state) => state.reset);
   const setAuthState = useAuthStore((state) => state.setAuthState);
@@ -21,6 +23,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       requestIdRef.current = requestId;
 
       if (session == null) {
+        pushRegistrationUserIdRef.current = null;
+
         if (isMounted) {
           reset();
         }
@@ -41,6 +45,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
           session,
         });
         setHydrated(true);
+
+        if (profile != null && pushRegistrationUserIdRef.current !== session.user.id) {
+          pushRegistrationUserIdRef.current = session.user.id;
+
+          void registerPushToken(session.user.id).catch((error) => {
+            pushRegistrationUserIdRef.current = null;
+            console.error('Failed to register push token', error);
+          });
+        }
       } catch (error) {
         console.error('Failed to sync auth session', error);
 

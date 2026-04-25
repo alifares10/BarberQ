@@ -47,7 +47,24 @@
     "title": "Booking Flow"
   },
   "common": {
-    "nextSteps": "Next steps"
+    "nextSteps": "Next steps",
+    "signOutButton": "Sign out",
+    "signingOutButton": "Signing out..."
+  },
+  "notifications": {
+    "booking_cancelled_by_customer_body": "{{customerName}} cancelled their appointment on {{date}} at {{time}}.",
+    "booking_cancelled_by_customer_title": "Booking cancelled",
+    "booking_cancelled_by_shop_body": "Your appointment at {{shopName}} on {{date}} at {{time}} was cancelled.",
+    "booking_cancelled_by_shop_title": "Booking cancelled",
+    "booking_confirmed_body": "Your appointment at {{shopName}} on {{date}} at {{time}} is confirmed.",
+    "booking_confirmed_title": "Booking confirmed",
+    "new_booking_body": "{{customerName}} booked for {{date}} at {{time}}.",
+    "new_booking_title": "New booking",
+    "reminder_customer_body": "Your appointment at {{shopName}} is in 1 hour ({{date}} at {{time}}).",
+    "reminder_shop_owner_body": "{{customerName}} has an appointment in 1 hour ({{date}} at {{time}}).",
+    "reminder_title": "Upcoming appointment",
+    "unknownCustomer": "A customer",
+    "unknownShop": "your barber shop"
   },
   "customer": {
     "bookingsDescription": "Placeholder customer bookings screen for upcoming and past appointments.",
@@ -165,7 +182,11 @@
       "totalDuration": "Total duration: {{minutes}} min",
       "totalPrice": "Total: ₪{{price}}"
     },
-    "profileDescription": "Placeholder profile screen for account settings and language preferences.",
+    "profileAccountDescription": "Sign out on this device after we remove its push token registration.",
+    "profileAccountTitle": "Account",
+    "profileDescription": "Manage your account on this device while language settings arrive in the polish phase.",
+    "profileFallbackName": "Customer account",
+    "profileFallbackPhone": "No phone number available",
     "profileTitle": "Profile"
   },
   "navigation": {
@@ -209,6 +230,12 @@
       "unknownCustomer": "Unknown customer"
     },
     "calendar": {
+      "appointmentDetailsTitle": "Appointment details",
+      "cancelButton": "Cancel appointment",
+      "cancellingButton": "Cancelling...",
+      "closeButton": "Close",
+      "confirmButton": "Confirm appointment",
+      "confirmingButton": "Confirming...",
       "description": "Browse appointments by week or month in a day-grouped list.",
       "empty": "No appointments in this range.",
       "goToShopButton": "Go to shop setup",
@@ -223,6 +250,7 @@
       "previousButton": "Previous",
       "rangeTitle": "Range",
       "retryButton": "Try again",
+      "statusUpdateError": "Could not update this appointment right now.",
       "title": "Calendar",
       "unknownBarber": "Unknown barber",
       "unknownCustomer": "Unknown customer",
@@ -342,7 +370,11 @@
       "unavailableDatesTitle": "Unavailable dates",
       "workingHoursTitle": "Working hours"
     },
-    "profileDescription": "Placeholder shop owner profile screen.",
+    "profileAccountDescription": "Sign out on this device after we remove its push token registration.",
+    "profileAccountTitle": "Account",
+    "profileDescription": "Manage your shop owner account on this device while language settings arrive in the polish phase.",
+    "profileFallbackName": "Shop owner account",
+    "profileFallbackPhone": "No phone number available",
     "profileTitle": "Profile",
     "shopDescription": "Placeholder shop management screen for business details and settings.",
     "shopManagement": {

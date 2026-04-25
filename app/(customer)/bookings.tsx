@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { AppointmentCard, Button, ButtonText, Card, LoadingScreen, Text } from '@/components';
 import { cancelAppointment, fetchCustomerAppointments, type CustomerAppointment } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
+import { notifyBookingCancelled } from '@/lib/push/notify-booking';
 import { normalizeTime, parseIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -60,7 +61,9 @@ export default function CustomerBookingsScreen() {
   });
   const cancelMutation = useMutation({
     mutationFn: (appointmentId: string) => cancelAppointment(appointmentId),
-    onSuccess: async () => {
+    onSuccess: async (appointment) => {
+      void notifyBookingCancelled(appointment.id, 'customer');
+
       if (customerId != null) {
         await queryClient.invalidateQueries({ queryKey: customerQueryKeys.customerAppointments(customerId) });
       }

@@ -90,14 +90,14 @@ Full design spec & root plan: `plan.md`
 
 ## Phase 6: Push Notifications
 
-- [ ] 1. **Register push tokens** — on app launch, get Expo push token, store in `push_tokens`
-- [ ] 2. **Create Edge Function: `send-push-notification`** — accepts user_id + message, looks up token, calls Expo Push API
-- [ ] 3. **Trigger notifications:**
+- [x] 1. **Register push tokens** — on app launch, get Expo push token, store in `push_tokens`
+- [x] 2. **Create Edge Function: `send-push-notification`** — accepts user_id + message, looks up token, calls Expo Push API
+- [x] 3. **Trigger notifications:**
   - New booking → notify shop owner
   - Booking confirmed → notify customer
   - Booking cancelled → notify the other party
-- [ ] 4. **Appointment reminders** — Supabase cron job or pg_cron to trigger 1-hour-before reminders
-- [ ] **Phase 6 verified** (lint, type check, tests, build)
+- [x] 4. **Appointment reminders** — Supabase cron job or pg_cron to trigger 1-hour-before reminders
+- [x] **Phase 6 verified** (lint, type check, tests, build)
 
 ## Phase 7: Polish & RTL
 

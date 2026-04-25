@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 type Shop = Database['public']['Tables']['shops']['Row'];
 type ShopInsert = Database['public']['Tables']['shops']['Insert'];
 type ShopUpdate = Database['public']['Tables']['shops']['Update'];
+type Appointment = Database['public']['Tables']['appointments']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type Barber = Database['public']['Tables']['barbers']['Row'];
 type BarberInsert = Database['public']['Tables']['barbers']['Insert'];
@@ -22,6 +23,7 @@ type BarberUnavailableDateUpdate = Database['public']['Tables']['barber_unavaila
 type ShopClosure = Database['public']['Tables']['shop_closures']['Row'];
 type ShopClosureInsert = Database['public']['Tables']['shop_closures']['Insert'];
 type ShopClosureUpdate = Database['public']['Tables']['shop_closures']['Update'];
+export type AppointmentStatusUpdate = 'cancelled' | 'completed' | 'confirmed';
 
 export type ShopAppointment = Pick<
   Database['public']['Tables']['appointments']['Row'],
@@ -488,6 +490,21 @@ export async function fetchShopAppointmentsByDateRange({
   });
 
   return appointments;
+}
+
+export async function updateAppointmentStatus(appointmentId: string, status: AppointmentStatusUpdate) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({ status })
+    .eq('id', appointmentId)
+    .select('*')
+    .single();
+
+  if (error != null) {
+    throw error;
+  }
+
+  return data satisfies Appointment;
 }
 
 export async function createShopClosure(payload: ShopClosureInsert) {
