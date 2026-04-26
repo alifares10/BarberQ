@@ -1,14 +1,18 @@
 import { Redirect, Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { LoadingScreen } from '@/components';
+import { AppTabBar, Icon, LoadingScreen } from '@/components';
+import type { IconName } from '@/components/Icon';
 import { getOnboardingRoute } from '@/lib/auth/routing';
-import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
+
+const tabIcon = (name: IconName) =>
+  function TabBarIcon({ color, size }: { color: string; size: number }) {
+    return <Icon name={name} color={color} size={size} />;
+  };
 
 export default function ShopOwnerTabsLayout() {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const pendingRole = useAuthStore((state) => state.pendingRole);
   const profile = useAuthStore((state) => state.profile);
@@ -32,21 +36,29 @@ export default function ShopOwnerTabsLayout() {
 
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.colorMuted,
-        tabBarStyle: {
-          backgroundColor: colors.tabBar,
-          borderTopColor: colors.border,
-        },
-      }}
+      tabBar={(props) => <AppTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen name="index" options={{ title: t('tabs.dashboard') }} />
-      <Tabs.Screen name="calendar" options={{ title: t('tabs.calendar') }} />
-      <Tabs.Screen name="shop" options={{ title: t('tabs.shop') }} />
-      <Tabs.Screen name="barbers" options={{ title: t('tabs.barbers') }} />
-      <Tabs.Screen name="profile" options={{ title: t('tabs.profile') }} />
+      <Tabs.Screen
+        name="index"
+        options={{ title: t('tabs.dashboard'), tabBarIcon: tabIcon('home') }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{ title: t('tabs.calendar'), tabBarIcon: tabIcon('cal') }}
+      />
+      <Tabs.Screen
+        name="shop"
+        options={{ title: t('tabs.shop'), tabBarIcon: tabIcon('settings') }}
+      />
+      <Tabs.Screen
+        name="barbers"
+        options={{ title: t('tabs.barbers'), tabBarIcon: tabIcon('scissors') }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{ title: t('tabs.profile'), tabBarIcon: tabIcon('user') }}
+      />
     </Tabs>
   );
 }
