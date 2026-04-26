@@ -18,6 +18,7 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-localization',
+    'expo-font',
     [
       'expo-notifications',
       {

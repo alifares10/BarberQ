@@ -8,6 +8,7 @@ import { TamaguiProvider } from 'tamagui';
 
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { ToastProvider } from '@/components/ToastProvider';
+import { useAppFonts } from '@/lib/fonts';
 import { i18nReady } from '@/lib/i18n';
 import { queryClient } from '@/lib/query-client';
 import { AuthProvider } from '@/providers/AuthProvider';
@@ -16,6 +17,7 @@ import tamaguiConfig from '@/tamagui.config';
 export function AppProviders({ children }: PropsWithChildren) {
   const colorScheme = useColorScheme();
   const [isI18nReady, setIsI18nReady] = useState(false);
+  const { fontsLoaded } = useAppFonts();
 
   useEffect(() => {
     let isMounted = true;
@@ -43,7 +45,7 @@ export function AppProviders({ children }: PropsWithChildren) {
             config={tamaguiConfig}
             defaultTheme={colorScheme === 'dark' ? 'dark' : 'light'}
           >
-            {isI18nReady ? (
+            {isI18nReady && fontsLoaded ? (
               <ToastProvider>
                 <AuthProvider>{children}</AuthProvider>
               </ToastProvider>
