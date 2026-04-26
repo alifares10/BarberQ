@@ -78,15 +78,16 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           <Pressable
             key={route.key}
             onPress={onPress}
-            onLayout={(e: LayoutChangeEvent) =>
+            onLayout={(e: LayoutChangeEvent) => {
+              // Read layout values synchronously — React Native recycles
+              // the synthetic event, so reading inside the updater function
+              // (which runs async) would hit a nulled nativeEvent.
+              const { x, width } = e.nativeEvent.layout;
               setLayouts((prev) => ({
                 ...prev,
-                [index]: {
-                  x: e.nativeEvent.layout.x,
-                  width: e.nativeEvent.layout.width,
-                },
-              }))
-            }
+                [index]: { x, width },
+              }));
+            }}
             style={{
               flex: 1,
               alignItems: 'center',
