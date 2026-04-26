@@ -1,24 +1,41 @@
 import { useMutation } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { AuthScreen, Button, ButtonText, Input, Text } from '@/components';
+import {
+  CTA,
+  Eyebrow,
+  FloatingLabelInput,
+  Icon,
+  Photo,
+  SerifTitle,
+  Text,
+} from '@/components';
 import { createProfile } from '@/lib/auth/api';
+import { fontFamilies } from '@/lib/fonts';
 import { registerPushToken } from '@/lib/push/register-push-token';
 import { getHomeRouteForRole } from '@/lib/auth/routing';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore, type ProfileRole } from '@/stores/auth-store';
 
 export default function ProfileSetupScreen() {
   const { i18n, t } = useTranslation();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { colors } = useAppTheme();
   const clearOnboardingDraft = useAuthStore((state) => state.clearOnboardingDraft);
   const pendingRole = useAuthStore((state) => state.pendingRole);
   const session = useAuthStore((state) => state.session);
   const setProfile = useAuthStore((state) => state.setProfile);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fullName, setFullName] = useState('');
+  // `pronouns` is captured locally for visual parity with the design but is
+  // not persisted — `createProfile` does not accept it. A future schema
+  // migration would extend the profiles table to store this.
+  const [pronouns, setPronouns] = useState('');
   const createProfileMutation = useMutation({
     mutationFn: createProfile,
   });
@@ -60,49 +77,140 @@ export default function ProfileSetupScreen() {
   };
 
   return (
-    <AuthScreen
-      title={t('auth.profileTitle')}
-      description={t('auth.profileDescription')}
-      footer={<Text color="$colorMuted">{t('auth.profileFooter')}</Text>}
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      contentContainerStyle={{
+        paddingHorizontal: 24,
+        paddingTop: insets.top + 12,
+        paddingBottom: insets.bottom + 32,
+      }}
     >
-      <View style={styles.content}>
-        <View style={styles.fieldGroup}>
-          <Text fontWeight="700">{t('auth.fullNameLabel')}</Text>
-          <Input
-            autoCapitalize="words"
-            autoComplete="name"
-            onChangeText={setFullName}
-            placeholder={t('auth.fullNamePlaceholder')}
-            textContentType="name"
-            value={fullName}
-          />
-        </View>
+      <Pressable
+        onPress={() => router.back()}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+      >
+        <Icon name="chevL" size={18} color={colors.muted} />
+        <Eyebrow>{t('auth.profileEyebrow')}</Eyebrow>
+      </Pressable>
 
-        <Text color="$colorMuted">
-          {t('auth.selectedRoleLabel', {
-            role: pendingRole === 'customer' ? t('auth.roleCustomer') : t('auth.roleShopOwner'),
-          })}
+      <View style={{ marginTop: 40 }}>
+        <SerifTitle size={30} weight="regular">
+          {t('auth.profileHeadlineA')}
+        </SerifTitle>
+        <SerifTitle size={30} italic color={colors.gold}>
+          {t('auth.profileHeadlineB')}
+        </SerifTitle>
+        <Text
+          style={{
+            marginTop: 12,
+            fontFamily: fontFamilies.sans.regular,
+            fontSize: 13,
+            lineHeight: 20,
+            color: colors.muted,
+          }}
+        >
+          {t('auth.profileSubtitle')}
         </Text>
-
-        {errorMessage != null ? <Text color="$error">{errorMessage}</Text> : null}
-
-        <Button disabled={createProfileMutation.isPending} onPress={() => void handleSubmit()}>
-          <ButtonText>
-            {createProfileMutation.isPending
-              ? t('auth.creatingProfileButton')
-              : t('auth.completeProfileButton')}
-          </ButtonText>
-        </Button>
       </View>
-    </AuthScreen>
+
+      <View style={{ marginTop: 36, alignItems: 'center' }}>
+        <View
+          style={{
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            borderWidth: 1,
+            borderColor: colors.goldBorder,
+            padding: 4,
+            borderCurve: 'continuous',
+          }}
+        >
+          <View
+            style={{
+              flex: 1,
+              borderRadius: 56,
+              overflow: 'hidden',
+              borderCurve: 'continuous',
+            }}
+          >
+            <Photo tone="portrait" dim={0.4} />
+          </View>
+        </View>
+        <View
+          style={{
+            position: 'absolute',
+            bottom: -4,
+            right: '50%',
+            transform: [{ translateX: 78 }],
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: colors.gold,
+            borderWidth: 2,
+            borderColor: colors.bg,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="camera" size={16} color={colors.bg} sw={1.6} />
+        </View>
+      </View>
+
+      <View style={{ marginTop: 36, gap: 18 }}>
+        <FloatingLabelInput
+          label={t('auth.fullNameLabel')}
+          autoCapitalize="words"
+          autoComplete="name"
+          textContentType="name"
+          value={fullName}
+          onChangeText={setFullName}
+          error={errorMessage != null}
+        />
+        <FloatingLabelInput
+          label={t('auth.pronounsLabel')}
+          value={pronouns}
+          onChangeText={setPronouns}
+        />
+      </View>
+
+      {errorMessage != null ? (
+        <Text
+          style={{
+            marginTop: 16,
+            color: colors.terra,
+            fontFamily: fontFamilies.sans.regular,
+            fontSize: 13,
+          }}
+        >
+          {errorMessage}
+        </Text>
+      ) : null}
+
+      <View style={{ marginTop: 40 }}>
+        <CTA
+          disabled={createProfileMutation.isPending}
+          onPress={() => void handleSubmit()}
+        >
+          {createProfileMutation.isPending
+            ? t('auth.creatingProfileButton')
+            : t('auth.completeProfileButton')}
+        </CTA>
+        <Pressable
+          onPress={() => router.back()}
+          style={{ marginTop: 14, alignItems: 'center' }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilies.sans.regular,
+              fontSize: 12,
+              color: colors.muted,
+            }}
+          >
+            {t('auth.profileSkip')}
+          </Text>
+        </Pressable>
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: 16,
-  },
-  fieldGroup: {
-    gap: 8,
-  },
-});

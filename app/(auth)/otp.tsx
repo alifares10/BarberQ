@@ -1,19 +1,33 @@
 import { useMutation } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import type { TextInput as RNTextInput } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { AuthScreen, Button, ButtonText, Input, Text, useToast } from '@/components';
+import { CTA, SerifTitle, StepHeader, Text, useToast } from '@/components';
 import { sendOtp, verifyOtp } from '@/lib/auth/api';
+import { fontFamilies } from '@/lib/fonts';
 import { maskPhoneNumber } from '@/lib/auth/phone';
 import { getOnboardingRoute } from '@/lib/auth/routing';
+import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
+
+const OTP_LENGTH = 6;
+
+const formatCountdown = (seconds: number) => {
+  const m = Math.floor(seconds / 60);
+  const s = (seconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+};
 
 export default function OtpScreen() {
   const { t } = useTranslation();
   const { showToast } = useToast();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { colors } = useAppTheme();
   const clearOnboardingDraft = useAuthStore((state) => state.clearOnboardingDraft);
   const pendingPhone = useAuthStore((state) => state.pendingPhone);
   const pendingRole = useAuthStore((state) => state.pendingRole);
@@ -22,11 +36,14 @@ export default function OtpScreen() {
   const [code, setCode] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [resendIn, setResendIn] = useState(60);
+  const hiddenInputRef = useRef<RNTextInput>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const resendOtpMutation = useMutation({
     mutationFn: sendOtp,
   });
   const verifyOtpMutation = useMutation({
-    mutationFn: ({ code: otpCode, phone }: { code: string; phone: string }) => verifyOtp(phone, otpCode),
+    mutationFn: ({ code: otpCode, phone }: { code: string; phone: string }) =>
+      verifyOtp(phone, otpCode),
   });
 
   useEffect(() => {
@@ -94,53 +111,180 @@ export default function OtpScreen() {
     }
   };
 
+  const cells = Array.from({ length: OTP_LENGTH });
+  const focusIndex = code.length;
+
   return (
-    <AuthScreen
-      title={t('auth.otpTitle')}
-      description={t('auth.otpDescription')}
-      footer={<Text color="$colorMuted">{t('auth.otpFooter', { phone: maskPhoneNumber(pendingPhone) })}</Text>}
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.bg,
+        paddingHorizontal: 24,
+        paddingTop: insets.top + 12,
+      }}
     >
-      <View style={styles.content}>
-        <View style={styles.fieldGroup}>
-          <Text fontWeight="700">{t('auth.otpLabel')}</Text>
-          <Input
-            autoCapitalize="none"
-            keyboardType="number-pad"
-            maxLength={6}
-            onChangeText={setCode}
-            placeholder={t('auth.otpPlaceholder')}
-            textContentType="oneTimeCode"
-            value={code}
-          />
-        </View>
+      <StepHeader step={2} total={3} />
 
-        {errorMessage != null ? <Text color="$error">{errorMessage}</Text> : null}
+      <View style={{ marginTop: 30 }}>
+        <SerifTitle size={32} weight="regular">
+          {t('auth.otpHeadlineA')}
+        </SerifTitle>
+        <SerifTitle size={32} italic color={colors.gold}>
+          {t('auth.otpHeadlineB')}
+        </SerifTitle>
+        <Text
+          style={{
+            marginTop: 14,
+            fontFamily: fontFamilies.sans.regular,
+            fontSize: 13,
+            lineHeight: 20,
+            color: colors.muted,
+          }}
+        >
+          {t('auth.otpSentTo')}{' '}
+          <Text style={{ color: colors.ivory }}>{maskPhoneNumber(pendingPhone)}</Text>
+        </Text>
+      </View>
 
-        <Button disabled={verifyOtpMutation.isPending} onPress={() => void handleVerify()}>
-          <ButtonText>
-            {verifyOtpMutation.isPending ? t('auth.verifyingOtpButton') : t('auth.verifyOtpButton')}
-          </ButtonText>
-        </Button>
+      <Pressable
+        onPress={() => hiddenInputRef.current?.focus()}
+        style={{ marginTop: 48, flexDirection: 'row', gap: 10 }}
+      >
+        {cells.map((_, i) => {
+          const isCellFocused = isFocused && i === focusIndex;
+          const digit = code[i] ?? '';
+          return (
+            <View
+              key={i}
+              style={{
+                flex: 1,
+                height: 64,
+                borderRadius: 6,
+                borderWidth: 1,
+                borderColor: isCellFocused ? colors.gold : colors.line,
+                backgroundColor: isCellFocused ? colors.goldDim : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderCurve: 'continuous',
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: fontFamilies.serif.medium,
+                  fontSize: 28,
+                  color: colors.ivory,
+                }}
+              >
+                {digit}
+              </Text>
+            </View>
+          );
+        })}
+        <TextInput
+          ref={hiddenInputRef}
+          value={code}
+          onChangeText={(next) => setCode(next.replace(/\D/g, '').slice(0, OTP_LENGTH))}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          keyboardType="number-pad"
+          maxLength={OTP_LENGTH}
+          caretHidden
+          textContentType="oneTimeCode"
+          autoComplete="sms-otp"
+          style={{
+            position: 'absolute',
+            opacity: 0,
+            width: 1,
+            height: 1,
+          }}
+        />
+      </Pressable>
 
-        <Button disabled={resendOtpMutation.isPending || resendIn > 0} onPress={() => void handleResend()}>
-          <ButtonText>
-            {resendIn > 0
-              ? t('auth.resendOtpCountdown', { seconds: resendIn })
-              : resendOtpMutation.isPending
+      <View style={{ marginTop: 22, alignItems: 'center' }}>
+        {resendIn > 0 ? (
+          <Text
+            style={{
+              fontFamily: fontFamilies.sans.regular,
+              fontSize: 12,
+              color: colors.muted,
+            }}
+          >
+            {t('auth.otpResendPrefix')}{' '}
+            <Text
+              style={{
+                fontFamily: fontFamilies.mono.regular,
+                color: colors.ivory,
+                fontSize: 12,
+              }}
+            >
+              {formatCountdown(resendIn)}
+            </Text>
+          </Text>
+        ) : (
+          <Pressable
+            disabled={resendOtpMutation.isPending}
+            onPress={() => void handleResend()}
+          >
+            <Text
+              style={{
+                fontFamily: fontFamilies.sans.regular,
+                fontSize: 12,
+                color: colors.gold,
+              }}
+            >
+              {resendOtpMutation.isPending
                 ? t('auth.resendingOtpButton')
                 : t('auth.resendOtpButton')}
-          </ButtonText>
-        </Button>
+            </Text>
+          </Pressable>
+        )}
       </View>
-    </AuthScreen>
+
+      {errorMessage != null ? (
+        <Text
+          style={{
+            marginTop: 16,
+            textAlign: 'center',
+            color: colors.terra,
+            fontFamily: fontFamilies.sans.regular,
+            fontSize: 13,
+          }}
+        >
+          {errorMessage}
+        </Text>
+      ) : null}
+
+      <View
+        style={{
+          position: 'absolute',
+          bottom: insets.bottom + 24,
+          left: 24,
+          right: 24,
+        }}
+      >
+        <CTA
+          disabled={code.length < OTP_LENGTH || verifyOtpMutation.isPending}
+          onPress={() => void handleVerify()}
+        >
+          {verifyOtpMutation.isPending
+            ? t('auth.verifyingOtpButton')
+            : t('auth.verifyOtpButton')}
+        </CTA>
+        <Pressable
+          onPress={() => router.back()}
+          style={{ marginTop: 14, alignItems: 'center' }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilies.sans.regular,
+              fontSize: 12,
+              color: colors.gold,
+            }}
+          >
+            {t('auth.otpUseDifferentNumber')}
+          </Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: 16,
-  },
-  fieldGroup: {
-    gap: 8,
-  },
-});
