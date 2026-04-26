@@ -2,7 +2,15 @@ import { useMutation } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import type { TextInput as RNTextInput } from 'react-native';
-import { Pressable, TextInput, View } from 'react-native';
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  TextInput,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
@@ -60,6 +68,21 @@ export default function OtpScreen() {
     };
   }, [resendIn]);
 
+  // Holds the latest `handleVerify` so the auto-submit effect can call it
+  // without re-firing whenever the function identity changes each render.
+  const handleVerifyRef = useRef<() => Promise<void>>(async () => {});
+
+  // Auto-submit when the user has entered all six digits — saves a tap and
+  // matches the keyboard-flow expectation on iOS number-pad which has no
+  // Done key. Depending on `code` only is intentional.
+  useEffect(() => {
+    if (code.length === OTP_LENGTH && !verifyOtpMutation.isPending) {
+      Keyboard.dismiss();
+      void handleVerifyRef.current();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
+
   if (pendingPhone == null) {
     return <Redirect href="/(auth)/phone" />;
   }
@@ -95,6 +118,10 @@ export default function OtpScreen() {
     }
   };
 
+  // Keep the ref pointed at the latest `handleVerify` closure so the
+  // auto-submit effect always calls the most current version.
+  handleVerifyRef.current = handleVerify;
+
   const handleResend = async () => {
     setErrorMessage(null);
 
@@ -115,15 +142,27 @@ export default function OtpScreen() {
   const focusIndex = code.length;
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: colors.bg,
-        paddingHorizontal: 24,
-        paddingTop: insets.top + 12,
-      }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1, backgroundColor: colors.bg }}
     >
-      <StepHeader step={2} total={3} />
+      <TouchableWithoutFeedback
+        onPress={() => {
+          // Tapping outside the cells dismisses the keypad. The cell row
+          // re-focuses the hidden input via its own Pressable.
+          Keyboard.dismiss();
+        }}
+        accessible={false}
+      >
+        <View
+          style={{
+            flex: 1,
+            paddingHorizontal: 24,
+            paddingTop: insets.top + 12,
+            paddingBottom: insets.bottom + 24,
+          }}
+        >
+          <StepHeader step={2} total={3} />
 
       <View style={{ marginTop: 30 }}>
         <SerifTitle size={32} weight="regular">
@@ -240,51 +279,53 @@ export default function OtpScreen() {
         )}
       </View>
 
-      {errorMessage != null ? (
-        <Text
-          style={{
-            marginTop: 16,
-            textAlign: 'center',
-            color: colors.terra,
-            fontFamily: fontFamilies.sans.regular,
-            fontSize: 13,
-          }}
-        >
-          {errorMessage}
-        </Text>
-      ) : null}
+          {errorMessage != null ? (
+            <Text
+              style={{
+                marginTop: 16,
+                textAlign: 'center',
+                color: colors.terra,
+                fontFamily: fontFamilies.sans.regular,
+                fontSize: 13,
+              }}
+            >
+              {errorMessage}
+            </Text>
+          ) : null}
 
-      <View
-        style={{
-          position: 'absolute',
-          bottom: insets.bottom + 24,
-          left: 24,
-          right: 24,
-        }}
-      >
-        <CTA
-          disabled={code.length < OTP_LENGTH || verifyOtpMutation.isPending}
-          onPress={() => void handleVerify()}
-        >
-          {verifyOtpMutation.isPending
-            ? t('auth.verifyingOtpButton')
-            : t('auth.verifyOtpButton')}
-        </CTA>
-        <Pressable
-          onPress={() => router.back()}
-          style={{ marginTop: 14, alignItems: 'center' }}
-        >
-          <Text
-            style={{
-              fontFamily: fontFamilies.sans.regular,
-              fontSize: 12,
-              color: colors.gold,
-            }}
-          >
-            {t('auth.otpUseDifferentNumber')}
-          </Text>
-        </Pressable>
-      </View>
-    </View>
+          {/* Spacer pushes the CTA to the bottom; KeyboardAvoidingView
+              shrinks the available area when the keypad is up. */}
+          <View style={{ flex: 1 }} />
+
+          <View>
+            <CTA
+              disabled={code.length < OTP_LENGTH || verifyOtpMutation.isPending}
+              onPress={() => {
+                Keyboard.dismiss();
+                void handleVerify();
+              }}
+            >
+              {verifyOtpMutation.isPending
+                ? t('auth.verifyingOtpButton')
+                : t('auth.verifyOtpButton')}
+            </CTA>
+            <Pressable
+              onPress={() => router.back()}
+              style={{ marginTop: 14, alignItems: 'center' }}
+            >
+              <Text
+                style={{
+                  fontFamily: fontFamilies.sans.regular,
+                  fontSize: 12,
+                  color: colors.gold,
+                }}
+              >
+                {t('auth.otpUseDifferentNumber')}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
