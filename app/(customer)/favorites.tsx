@@ -106,7 +106,7 @@ export default function FavoritesScreen() {
         </View>
         <CTA
           variant="ghost"
-          onPress={() => router.push('/(customer)/')}
+          onPress={() => router.push('/(customer)')}
           style={{
             borderWidth: 1,
             borderColor: colors.gold,
