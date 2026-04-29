@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 
 type ExploreMapProps = {
@@ -15,15 +16,37 @@ type ExploreMapProps = {
   }[];
 };
 
-export function ExploreMap({ center, onPressShop, shops }: ExploreMapProps) {
+/**
+ * Map view for Explore. We use `initialRegion` (one-shot) instead of the
+ * controlled `region` prop because the latter triggers a programmatic
+ * camera animation on every parent re-render — type a couple of search
+ * keystrokes, those animations stack on the native side, and Apple Maps
+ * crashes intermittently. The user can still pan freely; an explicit
+ * "recenter" affordance can use a ref + `animateToRegion` if needed.
+ */
+export const ExploreMap = memo(function ExploreMap({
+  center,
+  onPressShop,
+  shops,
+}: ExploreMapProps) {
+  const initialRegion = useMemo(
+    () => ({
+      latitude: center.latitude,
+      latitudeDelta: 0.08,
+      longitude: center.longitude,
+      longitudeDelta: 0.08,
+    }),
+    // Center should only seed the camera once. If the user's location
+    // updates later, the existing camera position is preserved.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   return (
     <MapView
-      region={{
-        latitude: center.latitude,
-        latitudeDelta: 0.08,
-        longitude: center.longitude,
-        longitudeDelta: 0.08,
-      }}
+      initialRegion={initialRegion}
+      pitchEnabled={false}
+      rotateEnabled={false}
       style={{ flex: 1 }}
     >
       {shops.map((shop) => (
@@ -40,4 +63,4 @@ export function ExploreMap({ center, onPressShop, shops }: ExploreMapProps) {
       ))}
     </MapView>
   );
-}
+});

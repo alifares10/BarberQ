@@ -202,6 +202,23 @@ export default function ExploreScreen() {
     [filteredShops, t],
   );
 
+  // Stable reference for the map's marker list. Constructing this inline
+  // in JSX would hand `<ExploreMap>` a fresh array every keystroke even
+  // when `filteredShops` itself was unchanged, which (combined with the
+  // controlled-camera issue we already fixed) was the second native-side
+  // hazard behind the intermittent Explore crash.
+  const mapShops = useMemo(
+    () =>
+      filteredShops.map(({ shop }) => ({
+        address: shop.address,
+        id: shop.id,
+        latitude: shop.latitude,
+        longitude: shop.longitude,
+        name: shop.name,
+      })),
+    [filteredShops],
+  );
+
   const mapCenter = useMemo(
     () =>
       userCoordinates ?? {
@@ -332,17 +349,7 @@ export default function ExploreScreen() {
           borderColor: colors.goldHair,
         }}
       >
-        <ExploreMap
-          center={mapCenter}
-          onPressShop={handleOpenShop}
-          shops={filteredShops.map(({ shop }) => ({
-            address: shop.address,
-            id: shop.id,
-            latitude: shop.latitude,
-            longitude: shop.longitude,
-            name: shop.name,
-          }))}
-        />
+        <ExploreMap center={mapCenter} onPressShop={handleOpenShop} shops={mapShops} />
         <View
           style={{
             position: 'absolute',
@@ -415,6 +422,13 @@ export default function ExploreScreen() {
           </View>
         ) : (
           <FlashList
+            // Force a remount when the category filter changes —
+            // FlashList v2 caches per-row layout offsets, and dropping
+            // most of the data on a chip tap can leave cards visually
+            // misplaced (same pattern as the Bookings fix). We
+            // intentionally don't key on `searchQuery` because that
+            // would remount on every keystroke.
+            key={selectedServiceFilter ?? '__all__'}
             ListEmptyComponent={
               <View style={{ paddingHorizontal: 20 }}>
                 <StateCard description={t('customer.explore.noShops')} variant="empty" />
