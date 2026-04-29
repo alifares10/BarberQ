@@ -53,3 +53,9 @@ After each implementation phase, run the full check before moving on:
 Do not proceed to the next phase if any of these fail.
 
 When all checks pass, update `IMPLEMENTATION-PLAN.md` — mark the completed phase and its sub-items with `[x]` checkboxes.
+
+## Git rules
+
+- **Never run `git commit`, `git push`, `git merge`, or `git reset` without explicit confirmation in the same turn.** Even if a user request implies committing (e.g. "put this on branch X", "save this to redesign-v1"), pause and ask before running the commit/merge/push. State what you'd commit, where, and wait.
+- This applies to every git-mutating command — including amends, force-pushes, branch deletions, and worktree operations.
+- Read-only git commands (`status`, `log`, `diff`, `branch --show-current`) do not need confirmation.
