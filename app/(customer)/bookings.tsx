@@ -413,6 +413,12 @@ export default function CustomerBookingsScreen() {
 
       <View style={{ flex: 1, marginTop: 18 }}>
         <FlashList
+          // Force a remount when the date filter flips. FlashList v2
+          // caches per-row offsets internally and reuses them across
+          // re-renders, which left phantom space above the first row
+          // and pushed initial content below the fold when `data`
+          // shrank from filtering.
+          key={selectedDate ?? '__all__'}
           ListEmptyComponent={
             <View style={{ paddingHorizontal: 20 }}>
               <StateCard description={t('customer.bookings.empty')} variant="empty" />
@@ -423,7 +429,10 @@ export default function CustomerBookingsScreen() {
             paddingBottom: 24,
           }}
           data={rows}
-          getItemType={(item) => (item.type === 'header' ? 'header' : 'appointment')}
+          getItemType={(item) => {
+            if (item.type === 'header') return 'header';
+            return item.compact ? 'past' : 'upcoming';
+          }}
           keyExtractor={(item) => item.id}
           renderItem={renderRow}
         />
