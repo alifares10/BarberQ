@@ -11,7 +11,8 @@ export type StatusKind =
   | 'cancelled'
   | 'completed'
   | 'open'
-  | 'closed';
+  | 'closed'
+  | 'unknown';
 
 export type StatusProps = {
   kind: StatusKind;
@@ -39,6 +40,7 @@ export const Status = memo(function Status({ kind, label, compact = false }: Sta
       case 'closed':
         return colors.terra;
       case 'completed':
+      case 'unknown':
         return colors.muted;
     }
   })();
