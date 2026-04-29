@@ -163,7 +163,10 @@
       "title": "My Bookings",
       "unknownBarber": "Unknown barber",
       "unknownShop": "Unknown shop",
-      "upcomingSection": "Upcoming"
+      "upcomingSection": "Upcoming",
+      "newButton": "+ NEW",
+      "withBarber": "w/ {{barber}}",
+      "withBarberAndServices": "w/ {{barber}} · {{services}}"
     },
     "datetime": {
       "backToExplore": "Back to explore",
@@ -215,12 +218,26 @@
       "locationDenied": "Location access is off. Use manual city or area search to find shops.",
       "noShops": "No shops match your current search or filter.",
       "retryButton": "Try again",
-      "searchPlaceholder": "Search by shop name or area"
+      "searchPlaceholder": "Search shops, barbers, services",
+      "greetingEyebrow": "GOOD MORNING",
+      "greetingPrefix": "Hello,",
+      "greetingFallback": "friend",
+      "nearYouTitle": "Near you",
+      "seeAll": "See all",
+      "shopTagline": "BARBER SHOP"
     },
     "exploreDescription": "Placeholder explore screen for nearby barber shops, maps, and discovery.",
     "exploreTitle": "Explore Shops",
     "favoritesDescription": "Placeholder favorites screen for saved shops.",
-    "favoritesTitle": "Favorites",
+    "favoritesTitle": "Saved",
+    "favorites": {
+      "all": "All",
+      "shops": "Shops",
+      "barbers": "Barbers",
+      "emptyTitle": "Nothing saved yet.",
+      "emptyBody": "Tap the heart on any shop or barber to keep them close.",
+      "browseButton": "Browse shops"
+    },
     "shopDetail": {
       "barbersTitle": "Choose a barber",
       "callShopButton": "Call shop",
@@ -253,7 +270,21 @@
     "profileDescription": "Manage your account, language, and sign-in on this device.",
     "profileFallbackName": "Customer account",
     "profileFallbackPhone": "No phone number available",
-    "profileTitle": "Profile"
+    "profileTitle": "Profile",
+    "profile": {
+      "editButton": "EDIT PROFILE",
+      "languageLabel": "Language",
+      "notificationsLabel": "Notifications",
+      "notificationsValue": "On",
+      "locationLabel": "Location",
+      "locationValue": "While using",
+      "privacyLabel": "Privacy & data",
+      "appearanceLabel": "Appearance",
+      "appearanceValueDark": "Dark",
+      "appearanceValueLight": "Light",
+      "aboutLabel": "About BarberQ",
+      "aboutValue": "v 1.4"
+    }
   },
   "navigation": {
     "booking": "Open Booking Stack",

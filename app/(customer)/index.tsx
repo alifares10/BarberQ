@@ -1,31 +1,43 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
+import { Image } from 'expo-image';
 import { useQuery } from '@tanstack/react-query';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { Card, ExploreMap, Input, LoadingScreen, ShopCard, StateCard, Text } from '@/components';
+import {
+  Eyebrow,
+  ExploreMap,
+  Icon,
+  LoadingScreen,
+  Photo,
+  SerifTitle,
+  ShopCard,
+  StateCard,
+  Text,
+} from '@/components';
+import { CategoryChipRow } from '@/components/customer/CategoryChipRow';
+import { SearchBar } from '@/components/customer/SearchBar';
+import { fontFamilies } from '@/lib/fonts';
 import { calculateDistanceKm, formatDistance } from '@/lib/customer/distance';
 import { fetchActiveShops, type CustomerShop } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
-import { getRtlLayout } from '@/lib/rtl';
 import { useAppTheme } from '@/lib/theme';
+import { useAuthStore } from '@/stores/auth-store';
 
 const TEL_AVIV_COORDINATES = {
   latitude: 32.0853,
   longitude: 34.7818,
 };
 
+const DEFAULT_BLURHASH = 'L6Pj0^i_.AyE_3t7t7R**0o#DgR4';
+
 type Coordinates = {
   latitude: number;
   longitude: number;
-};
-
-type ServiceFilterOption = {
-  id: string;
-  name: string;
 };
 
 type LocationState = 'denied' | 'granted' | 'unknown';
@@ -36,11 +48,11 @@ type ShopDistance = {
 };
 
 type ShopRow = {
+  shopId: string;
+  name: string;
   address: string;
   coverImageUrl: string | null;
   distanceLabel: string | null;
-  name: string;
-  shopId: string;
 };
 
 const ShopListItem = memo(function ShopListItem({
@@ -52,21 +64,22 @@ const ShopListItem = memo(function ShopListItem({
 }) {
   return (
     <ShopCard
+      shopId={item.shopId}
+      name={item.name}
       address={item.address}
       coverImageUrl={item.coverImageUrl}
       distance={item.distanceLabel}
-      name={item.name}
       onPress={onPress}
-      shopId={item.shopId}
     />
   );
 });
 
 export default function ExploreScreen() {
-  const { i18n, t } = useTranslation();
-  const rtlLayout = getRtlLayout(i18n.language);
+  const { t } = useTranslation();
   const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
+  const profile = useAuthStore((state) => state.profile);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceFilter, setSelectedServiceFilter] = useState<string | null>(null);
   const [locationState, setLocationState] = useState<LocationState>('unknown');
@@ -124,75 +137,69 @@ export default function ExploreScreen() {
 
   const shops = useMemo(() => shopsQuery.data ?? [], [shopsQuery.data]);
   const serviceOptions = useMemo(() => {
-    const uniqueServices = new Map<string, ServiceFilterOption>();
-
+    const unique = new Map<string, { id: string; name: string }>();
     for (const shop of shops) {
       for (const service of shop.services) {
-        if (!uniqueServices.has(service.id)) {
-          uniqueServices.set(service.id, {
-            id: service.id,
-            name: service.name,
-          });
+        if (!unique.has(service.id)) {
+          unique.set(service.id, { id: service.id, name: service.name });
         }
       }
     }
-
-    return Array.from(uniqueServices.values()).sort((optionA, optionB) => optionA.name.localeCompare(optionB.name));
+    return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [shops]);
 
   const shopsWithDistance = useMemo(() => {
-    const mappedShops = shops.map((shop) => {
+    const mapped = shops.map((shop) => {
       if (userCoordinates == null) {
-        return {
-          distanceKm: null,
-          shop,
-        } satisfies ShopDistance;
+        return { distanceKm: null, shop } satisfies ShopDistance;
       }
-
       return {
-        distanceKm: calculateDistanceKm(userCoordinates.latitude, userCoordinates.longitude, shop.latitude, shop.longitude),
+        distanceKm: calculateDistanceKm(
+          userCoordinates.latitude,
+          userCoordinates.longitude,
+          shop.latitude,
+          shop.longitude,
+        ),
         shop,
       } satisfies ShopDistance;
     });
-
-    return mappedShops.sort((itemA, itemB) => {
-      if (itemA.distanceKm == null || itemB.distanceKm == null) {
-        return itemA.shop.created_at.localeCompare(itemB.shop.created_at);
+    return mapped.sort((a, b) => {
+      if (a.distanceKm == null || b.distanceKm == null) {
+        return a.shop.created_at.localeCompare(b.shop.created_at);
       }
-
-      return itemA.distanceKm - itemB.distanceKm;
+      return a.distanceKm - b.distanceKm;
     });
   }, [shops, userCoordinates]);
 
   const filteredShops = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-
+    const normalized = searchQuery.trim().toLowerCase();
     return shopsWithDistance.filter(({ shop }) => {
       const matchesSearch =
-        normalizedQuery.length === 0
+        normalized.length === 0
           ? true
-          : shop.name.toLowerCase().includes(normalizedQuery) || shop.address.toLowerCase().includes(normalizedQuery);
+          : shop.name.toLowerCase().includes(normalized) ||
+            shop.address.toLowerCase().includes(normalized);
       const matchesService =
-        selectedServiceFilter == null ? true : shop.services.some((service) => service.id === selectedServiceFilter);
-
+        selectedServiceFilter == null
+          ? true
+          : shop.services.some((service) => service.id === selectedServiceFilter);
       return matchesSearch && matchesService;
     });
   }, [searchQuery, selectedServiceFilter, shopsWithDistance]);
 
-  const shopRows = useMemo(
+  const shopRows = useMemo<ShopRow[]>(
     () =>
-      filteredShops.map(({ distanceKm, shop }) => {
-        const formattedDistance = distanceKm == null ? null : t('customer.explore.distanceAway', { distance: formatDistance(distanceKm) });
-
-        return {
-          address: shop.address,
-          coverImageUrl: shop.cover_image_url,
-          distanceLabel: formattedDistance,
-          name: shop.name,
-          shopId: shop.id,
-        } satisfies ShopRow;
-      }),
-    [filteredShops, t]
+      filteredShops.map(({ distanceKm, shop }) => ({
+        shopId: shop.id,
+        name: shop.name,
+        address: shop.address,
+        coverImageUrl: shop.cover_image_url,
+        distanceLabel:
+          distanceKm == null
+            ? null
+            : t('customer.explore.distanceAway', { distance: formatDistance(distanceKm) }),
+      })),
+    [filteredShops, t],
   );
 
   const mapCenter = useMemo(
@@ -201,31 +208,130 @@ export default function ExploreScreen() {
         latitude: TEL_AVIV_COORDINATES.latitude,
         longitude: TEL_AVIV_COORDINATES.longitude,
       },
-    [userCoordinates]
+    [userCoordinates],
   );
 
   const handleOpenShop = useCallback(
     (shopId: string) => {
-      router.push({
-        params: { shopId },
-        pathname: '/booking/[shopId]',
-      });
+      router.push({ params: { shopId }, pathname: '/booking/[shopId]' });
     },
-    [router]
+    [router],
   );
 
   const renderShop = useCallback<ListRenderItem<ShopRow>>(
     ({ item }) => <ShopListItem item={item} onPress={handleOpenShop} />,
-    [handleOpenShop]
+    [handleOpenShop],
   );
 
   if (shopsQuery.isPending) {
     return <LoadingScreen />;
   }
 
+  const firstName = (profile?.full_name ?? '').split(/\s+/)[0] ?? '';
+  const greetingName =
+    firstName.length > 0 ? firstName : t('customer.explore.greetingFallback');
+
+  const categoryOptions: { id: string | null; name: string }[] = [
+    { id: null, name: t('customer.explore.allServices') },
+    ...serviceOptions,
+  ];
+
   return (
-    <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <View style={styles.mapContainer}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      {/* Header — greeting + avatar */}
+      <View
+        style={{
+          paddingTop: insets.top + 8,
+          paddingHorizontal: 20,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <View>
+          <Eyebrow size={9}>{t('customer.explore.greetingEyebrow')}</Eyebrow>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'baseline',
+              gap: 6,
+              marginTop: 4,
+            }}
+          >
+            <SerifTitle size={26} weight="regular">
+              {t('customer.explore.greetingPrefix')}
+            </SerifTitle>
+            <SerifTitle size={26} italic color={colors.gold}>
+              {greetingName}
+            </SerifTitle>
+          </View>
+        </View>
+        <Pressable
+          onPress={() => router.push('/(customer)/profile')}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            borderWidth: 1,
+            borderColor: colors.goldBorder,
+            padding: 2,
+          }}
+        >
+          <View
+            style={{
+              flex: 1,
+              borderRadius: 17,
+              overflow: 'hidden',
+              borderCurve: 'continuous',
+            }}
+          >
+            {profile?.avatar_url ? (
+              <Image
+                source={{ uri: profile.avatar_url }}
+                placeholder={{ blurhash: DEFAULT_BLURHASH }}
+                contentFit="cover"
+                style={{ width: '100%', height: '100%' }}
+              />
+            ) : (
+              <Photo tone="portrait" dim={0.3} />
+            )}
+          </View>
+        </Pressable>
+      </View>
+
+      {/* Search */}
+      <View style={{ paddingHorizontal: 20, marginTop: 18 }}>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder={t('customer.explore.searchPlaceholder')}
+          onPressFilter={() => {
+            // TODO: open a filter sheet (services, distance, hours).
+          }}
+        />
+      </View>
+
+      {/* Categories */}
+      <View style={{ marginTop: 16 }}>
+        <CategoryChipRow
+          options={categoryOptions}
+          selectedId={selectedServiceFilter}
+          onSelect={setSelectedServiceFilter}
+        />
+      </View>
+
+      {/* Map */}
+      <View
+        style={{
+          marginTop: 16,
+          height: 200,
+          backgroundColor: colors.surface,
+          overflow: 'hidden',
+          borderTopWidth: 1,
+          borderBottomWidth: 1,
+          borderColor: colors.goldHair,
+        }}
+      >
         <ExploreMap
           center={mapCenter}
           onPressShop={handleOpenShop}
@@ -237,108 +343,94 @@ export default function ExploreScreen() {
             name: shop.name,
           }))}
         />
+        <View
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: colors.elevated,
+            borderWidth: 1,
+            borderColor: colors.goldBorder,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="pin" size={16} color={colors.gold} />
+        </View>
       </View>
 
-      <View style={styles.controls}>
-        {locationState === 'denied' ? (
-          <Card style={{ backgroundColor: colors.surfaceMuted }}>
-            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.explore.locationDenied')}</Text>
-          </Card>
-        ) : null}
-
-        <Input onChangeText={setSearchQuery} placeholder={t('customer.explore.searchPlaceholder')} value={searchQuery} />
-
-        <View style={[styles.chipsRow, { flexDirection: rtlLayout.rowDirection }]}>
-          <Pressable
-            onPress={() => setSelectedServiceFilter(null)}
-            style={[
-              styles.chip,
-              { backgroundColor: selectedServiceFilter == null ? colors.primary : colors.chip },
-            ]}
+      {/* Near you rail */}
+      <View
+        style={{
+          flex: 1,
+          paddingTop: 20,
+        }}
+      >
+        <View
+          style={{
+            paddingHorizontal: 20,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            marginBottom: 14,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: fontFamilies.serif.italic,
+              fontSize: 18,
+              color: colors.ivory,
+            }}
           >
-            <Text color={selectedServiceFilter == null ? '$inverseColor' : '$colorMuted'} textAlign="center">
-              {t('customer.explore.allServices')}
+            {t('customer.explore.nearYouTitle')}
+          </Text>
+          {locationState === 'denied' ? (
+            <Text
+              style={{
+                fontFamily: fontFamilies.sans.regular,
+                fontSize: 11,
+                color: colors.muted,
+              }}
+            >
+              {t('customer.explore.locationDenied')}
             </Text>
-          </Pressable>
-
-          {serviceOptions.map((option) => {
-            const isSelected = selectedServiceFilter === option.id;
-
-            return (
-              <Pressable
-                key={option.id}
-                onPress={() => setSelectedServiceFilter(option.id)}
-                style={[styles.chip, { backgroundColor: isSelected ? colors.primary : colors.chip }]}
-              >
-                <Text color={isSelected ? '$inverseColor' : '$colorMuted'} textAlign="center">{option.name}</Text>
-              </Pressable>
-            );
-          })}
+          ) : (
+            <Eyebrow size={11} color={colors.gold}>
+              {t('customer.explore.seeAll')}
+            </Eyebrow>
+          )}
         </View>
-      </View>
 
-      {shopsQuery.isError ? (
-        <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
-          <StateCard
-            actionLabel={t('customer.explore.retryButton')}
-            description={t('customer.explore.loadError')}
-            onAction={() => void shopsQuery.refetch()}
-            variant="error"
+        {shopsQuery.isError ? (
+          <View style={{ paddingHorizontal: 20 }}>
+            <StateCard
+              actionLabel={t('customer.explore.retryButton')}
+              description={t('customer.explore.loadError')}
+              onAction={() => void shopsQuery.refetch()}
+              variant="error"
+            />
+          </View>
+        ) : (
+          <FlashList
+            ListEmptyComponent={
+              <View style={{ paddingHorizontal: 20 }}>
+                <StateCard description={t('customer.explore.noShops')} variant="empty" />
+              </View>
+            }
+            contentContainerStyle={{
+              gap: 14,
+              paddingHorizontal: 20,
+              paddingBottom: 24,
+            }}
+            data={shopRows}
+            keyExtractor={(item) => item.shopId}
+            renderItem={renderShop}
           />
-        </View>
-      ) : (
-        <FlashList
-          ListEmptyComponent={
-            <StateCard description={t('customer.explore.noShops')} variant="empty" />
-          }
-          contentContainerStyle={styles.listContent}
-          contentInsetAdjustmentBehavior="automatic"
-          data={shopRows}
-
-          keyExtractor={(item) => item.shopId}
-          renderItem={renderShop}
-        />
-      )}
+        )}
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  chip: {
-    borderCurve: 'continuous',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  chipsRow: {
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  controls: {
-    gap: 12,
-    padding: 16,
-    paddingBottom: 8,
-  },
-  errorContainer: {
-    flex: 1,
-    gap: 12,
-    padding: 16,
-  },
-  listContent: {
-    gap: 12,
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 24,
-  },
-  mapContainer: {
-    borderCurve: 'continuous',
-    borderRadius: 20,
-    height: 252,
-    margin: 16,
-    marginBottom: 0,
-    overflow: 'hidden',
-  },
-  screen: {
-    flex: 1,
-  },
-});

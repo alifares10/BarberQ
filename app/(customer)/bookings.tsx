@@ -1,34 +1,50 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { AppointmentCard, Card, LoadingScreen, StateCard, Text, useToast } from '@/components';
-import { cancelAppointment, fetchCustomerAppointments, type CustomerAppointment } from '@/lib/customer/api';
+import {
+  Eyebrow,
+  LoadingScreen,
+  SerifTitle,
+  StateCard,
+  Text,
+  useToast,
+} from '@/components';
+import {
+  AppointmentCard,
+  type AppointmentStatusKind,
+} from '@/components/customer/AppointmentCard';
+import { DateRail } from '@/components/customer/DateRail';
+import {
+  cancelAppointment,
+  fetchCustomerAppointments,
+  type CustomerAppointment,
+} from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
+import { fontFamilies } from '@/lib/fonts';
 import { notifyBookingCancelled } from '@/lib/push/notify-booking';
-import { getRtlLayout } from '@/lib/rtl';
+import { parseIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { useAppTheme } from '@/lib/theme';
-import { normalizeTime, parseIsoDate } from '@/lib/shop-owner/appointments-helpers';
 import { useAuthStore } from '@/stores/auth-store';
 
 type BookingListItem =
+  | { type: 'header'; id: string; title: string; count: number; tone: 'gold' | 'muted' }
   | {
-      id: string;
-      title: string;
-      type: 'header';
-    }
-  | {
-      appointment: CustomerAppointment;
-      canCancel: boolean;
-      dateLabel: string;
-      id: string;
-      servicesSummary: string;
-      showCancelAction: boolean;
-      status: 'cancelled' | 'completed' | 'confirmed' | 'pending' | 'unknown';
-      statusLabel: string;
       type: 'appointment';
+      id: string;
+      appointment: CustomerAppointment;
+      compact: boolean;
+      canCancel: boolean;
+      showCancelAction: boolean;
+      dateEyebrow: string;
+      startTime: string;
+      servicesSummary: string;
+      status: AppointmentStatusKind;
+      statusLabel: string;
     };
 
 function toAppointmentDateTime(dateValue: string, timeValue: string) {
@@ -42,20 +58,48 @@ function toAppointmentDateTime(dateValue: string, timeValue: string) {
   return parsedDate;
 }
 
+const formatTime = (date: Date, locale: string) =>
+  new Intl.DateTimeFormat(locale, {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+
+const next6Days = () => {
+  const out: string[] = [];
+  const today = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const yyyy = d.getFullYear();
+    const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+    const dd = d.getDate().toString().padStart(2, '0');
+    out.push(`${yyyy}-${mm}-${dd}`);
+  }
+  return out;
+};
+
 export default function CustomerBookingsScreen() {
   const { i18n, t } = useTranslation();
   const { showToast } = useToast();
-  const rtlLayout = getRtlLayout(i18n.language);
   const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const session = useAuthStore((state) => state.session);
   const customerId = session?.user.id ?? null;
   const [cancelingAppointmentId, setCancelingAppointmentId] = useState<string | null>(null);
-  const [cancelError, setCancelError] = useState<string | null>(null);
-  const dateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(i18n.language, { day: 'numeric', month: 'short', weekday: 'short', year: 'numeric' }),
-    [i18n.language]
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const dates = useMemo(() => next6Days(), []);
+  const dateEyebrowFormatter = useMemo(
+    () => new Intl.DateTimeFormat(i18n.language, { weekday: 'short', month: 'short', day: 'numeric' }),
+    [i18n.language],
   );
+  const compactDateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(i18n.language, { month: 'short', day: '2-digit' }),
+    [i18n.language],
+  );
+
   const appointmentsQuery = useQuery({
     enabled: customerId != null,
     queryFn: () => fetchCustomerAppointments(customerId ?? ''),
@@ -70,48 +114,44 @@ export default function CustomerBookingsScreen() {
       void notifyBookingCancelled(appointment.id, 'customer');
 
       if (customerId != null) {
-        await queryClient.invalidateQueries({ queryKey: customerQueryKeys.customerAppointments(customerId) });
+        await queryClient.invalidateQueries({
+          queryKey: customerQueryKeys.customerAppointments(customerId),
+        });
       }
     },
   });
 
   const getStatusLabel = useCallback(
     (status: string) => {
-      if (status === 'pending') {
-        return t('customer.bookings.status.pending');
-      }
-
-      if (status === 'confirmed') {
-        return t('customer.bookings.status.confirmed');
-      }
-
-      if (status === 'completed') {
-        return t('customer.bookings.status.completed');
-      }
-
-      if (status === 'cancelled') {
-        return t('customer.bookings.status.cancelled');
-      }
-
+      if (status === 'pending') return t('customer.bookings.status.pending');
+      if (status === 'confirmed') return t('customer.bookings.status.confirmed');
+      if (status === 'completed') return t('customer.bookings.status.completed');
+      if (status === 'cancelled') return t('customer.bookings.status.cancelled');
       return t('customer.bookings.status.unknown');
     },
-    [t]
+    [t],
   );
 
-  const rows = useMemo(() => {
+  const { upcoming, past, countByDate } = useMemo(() => {
     const appointments = appointmentsQuery.data ?? [];
     const now = Date.now();
+    const counts: Record<string, number> = {};
+    const upcomingItems: BookingListItem[] = [];
+    const pastItems: BookingListItem[] = [];
+
     const parsed = appointments.map((appointment) => {
-      const appointmentDateTime = toAppointmentDateTime(appointment.appointment_date, appointment.appointment_time);
+      const dt = toAppointmentDateTime(appointment.appointment_date, appointment.appointment_time);
       const status = appointment.status;
-      const hasUpcomingStatus = status === 'pending' || status === 'confirmed';
-      const isUpcoming = hasUpcomingStatus && appointmentDateTime.getTime() >= now;
+      const isUpcomingStatus = status === 'pending' || status === 'confirmed';
+      const isUpcoming = isUpcomingStatus && dt.getTime() >= now;
       const cancellationWindow = appointment.shop?.cancellation_window_hours;
-      const hoursUntil = (appointmentDateTime.getTime() - now) / 3_600_000;
-      const canCancel = isUpcoming && (cancellationWindow == null || hoursUntil >= cancellationWindow);
+      const hoursUntil = (dt.getTime() - now) / 3_600_000;
+      const canCancel =
+        isUpcoming && (cancellationWindow == null || hoursUntil >= cancellationWindow);
+
       const serviceNames = appointment.appointment_services
-        .map((serviceLink) => serviceLink.service?.name)
-        .filter((serviceName): serviceName is string => serviceName != null && serviceName.length > 0);
+        .map((link) => link.service?.name)
+        .filter((name): name is string => name != null && name.length > 0);
       const servicesSummary =
         serviceNames.length === 0
           ? t('customer.bookings.noServices')
@@ -124,154 +164,198 @@ export default function CustomerBookingsScreen() {
 
       return {
         appointment,
-        appointmentDateTime,
-        canCancel,
-        dateLabel: dateFormatter.format(appointmentDateTime),
+        dt,
         isUpcoming,
+        canCancel,
         servicesSummary,
       };
     });
-    const upcoming = parsed
-      .filter((item) => item.isUpcoming)
-      .sort((itemA, itemB) => itemA.appointmentDateTime.getTime() - itemB.appointmentDateTime.getTime());
-    const past = parsed
-      .filter((item) => !item.isUpcoming)
-      .sort((itemA, itemB) => itemB.appointmentDateTime.getTime() - itemA.appointmentDateTime.getTime());
-    const listItems: BookingListItem[] = [];
 
+    parsed.sort((a, b) => a.dt.getTime() - b.dt.getTime());
+
+    for (const entry of parsed) {
+      const statusValue: AppointmentStatusKind =
+        entry.appointment.status === 'pending' ||
+        entry.appointment.status === 'confirmed' ||
+        entry.appointment.status === 'completed' ||
+        entry.appointment.status === 'cancelled'
+          ? entry.appointment.status
+          : 'unknown';
+
+      const dateEyebrow = dateEyebrowFormatter.format(entry.dt).toUpperCase();
+      const startTime = formatTime(entry.dt, i18n.language);
+      const isoDate = entry.appointment.appointment_date;
+
+      if (entry.isUpcoming) {
+        counts[isoDate] = (counts[isoDate] ?? 0) + 1;
+        if (selectedDate != null && isoDate !== selectedDate) {
+          continue;
+        }
+        upcomingItems.push({
+          type: 'appointment',
+          id: `appointment-${entry.appointment.id}`,
+          appointment: entry.appointment,
+          compact: false,
+          canCancel: entry.canCancel,
+          showCancelAction: true,
+          dateEyebrow,
+          startTime,
+          servicesSummary: entry.servicesSummary,
+          status: statusValue,
+          statusLabel: getStatusLabel(entry.appointment.status),
+        });
+      } else {
+        pastItems.push({
+          type: 'appointment',
+          id: `appointment-${entry.appointment.id}`,
+          appointment: entry.appointment,
+          compact: true,
+          canCancel: false,
+          showCancelAction: false,
+          dateEyebrow: compactDateFormatter.format(entry.dt).toUpperCase(),
+          startTime,
+          servicesSummary: entry.servicesSummary,
+          status: statusValue,
+          statusLabel: getStatusLabel(entry.appointment.status),
+        });
+      }
+    }
+
+    return {
+      upcoming: upcomingItems,
+      past: pastItems.reverse(), // newest past first
+      countByDate: counts,
+    };
+  }, [
+    appointmentsQuery.data,
+    selectedDate,
+    dateEyebrowFormatter,
+    compactDateFormatter,
+    getStatusLabel,
+    i18n.language,
+    t,
+  ]);
+
+  const rows = useMemo<BookingListItem[]>(() => {
+    const out: BookingListItem[] = [];
     if (upcoming.length > 0) {
-      listItems.push({
+      out.push({
+        type: 'header',
         id: 'header-upcoming',
         title: t('customer.bookings.upcomingSection'),
-        type: 'header',
+        count: upcoming.length,
+        tone: 'gold',
       });
-
-      for (const item of upcoming) {
-        const statusValue =
-          item.appointment.status === 'pending' ||
-          item.appointment.status === 'confirmed' ||
-          item.appointment.status === 'completed' ||
-          item.appointment.status === 'cancelled'
-            ? item.appointment.status
-            : 'unknown';
-
-        listItems.push({
-          appointment: item.appointment,
-          canCancel: item.canCancel,
-          dateLabel: item.dateLabel,
-          id: `appointment-${item.appointment.id}`,
-          servicesSummary: item.servicesSummary,
-          showCancelAction: true,
-          status: statusValue,
-          statusLabel: getStatusLabel(item.appointment.status),
-          type: 'appointment',
-        });
-      }
+      out.push(...upcoming);
     }
-
     if (past.length > 0) {
-      listItems.push({
+      out.push({
+        type: 'header',
         id: 'header-past',
         title: t('customer.bookings.pastSection'),
-        type: 'header',
+        count: past.length,
+        tone: 'muted',
       });
-
-      for (const item of past) {
-        const statusValue =
-          item.appointment.status === 'pending' ||
-          item.appointment.status === 'confirmed' ||
-          item.appointment.status === 'completed' ||
-          item.appointment.status === 'cancelled'
-            ? item.appointment.status
-            : 'unknown';
-
-        listItems.push({
-          appointment: item.appointment,
-          canCancel: false,
-          dateLabel: item.dateLabel,
-          id: `appointment-${item.appointment.id}`,
-          servicesSummary: item.servicesSummary,
-          showCancelAction: false,
-          status: statusValue,
-          statusLabel: getStatusLabel(item.appointment.status),
-          type: 'appointment',
-        });
-      }
+      out.push(...past);
     }
-
-    return listItems;
-  }, [appointmentsQuery.data, dateFormatter, getStatusLabel, t]);
+    return out;
+  }, [upcoming, past, t]);
 
   const executeCancel = useCallback(
     async (appointmentId: string) => {
-      setCancelError(null);
       setCancelingAppointmentId(appointmentId);
-
       try {
         await cancelMutation.mutateAsync(appointmentId);
         showToast({ message: t('toast.bookingCancelled'), type: 'success' });
       } catch {
-        setCancelError(t('customer.bookings.cancelError'));
         showToast({ message: t('customer.bookings.cancelError'), type: 'error' });
       } finally {
         setCancelingAppointmentId(null);
       }
     },
-    [cancelMutation, showToast, t]
+    [cancelMutation, showToast, t],
   );
+
   const handleCancel = useCallback(
     (appointmentId: string) => {
-      Alert.alert(t('customer.bookings.cancelConfirmTitle'), t('customer.bookings.cancelConfirmMessage'), [
-        {
-          style: 'cancel',
-          text: t('customer.bookings.cancelConfirmKeepButton'),
-        },
-        {
-          onPress: () => {
-            void executeCancel(appointmentId);
+      Alert.alert(
+        t('customer.bookings.cancelConfirmTitle'),
+        t('customer.bookings.cancelConfirmMessage'),
+        [
+          { style: 'cancel', text: t('customer.bookings.cancelConfirmKeepButton') },
+          {
+            onPress: () => void executeCancel(appointmentId),
+            style: 'destructive',
+            text: t('customer.bookings.cancelConfirmProceedButton'),
           },
-          style: 'destructive',
-          text: t('customer.bookings.cancelConfirmProceedButton'),
-        },
-      ]);
+        ],
+      );
     },
-    [executeCancel, t]
+    [executeCancel, t],
   );
 
   const renderRow = useCallback<ListRenderItem<BookingListItem>>(
     ({ item }) => {
       if (item.type === 'header') {
         return (
-          <View style={styles.sectionHeader}>
-            <Text fontWeight="700" textAlign={rtlLayout.textAlign}>{item.title}</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 12,
+              marginTop: 8,
+              marginBottom: 14,
+            }}
+          >
+            <Eyebrow
+              size={9}
+              color={item.tone === 'gold' ? colors.gold : colors.muted}
+            >
+              {item.title}
+            </Eyebrow>
+            <View style={{ flex: 1, height: 1, backgroundColor: colors.lineSoft }} />
+            <Text
+              style={{
+                fontFamily: fontFamilies.mono.regular,
+                fontSize: 11,
+                fontVariant: ['tabular-nums'],
+                color: colors.muted,
+              }}
+            >
+              {item.count}
+            </Text>
           </View>
         );
       }
 
+      const { appointment } = item;
       return (
-        <AppointmentCard
-          appointmentId={item.appointment.id}
-          barberName={item.appointment.barber?.name ?? t('customer.bookings.unknownBarber')}
-          canCancel={item.canCancel}
-          date={item.dateLabel}
-          endTime={normalizeTime(item.appointment.end_time)}
-          isCancelling={cancelingAppointmentId === item.appointment.id}
-          onCancel={handleCancel}
-          servicesSummary={item.servicesSummary}
-          shopName={item.appointment.shop?.name ?? t('customer.bookings.unknownShop')}
-          showCancelAction={item.showCancelAction}
-          startTime={normalizeTime(item.appointment.appointment_time)}
-          status={item.status}
-          statusLabel={item.statusLabel}
-        />
+        <View style={{ marginBottom: item.compact ? 0 : 12 }}>
+          <AppointmentCard
+            appointmentId={appointment.id}
+            shopName={appointment.shop?.name ?? t('customer.bookings.unknownShop')}
+            shopCoverImageUrl={appointment.shop?.cover_image_url ?? null}
+            barberName={appointment.barber?.name ?? t('customer.bookings.unknownBarber')}
+            servicesSummary={item.servicesSummary}
+            dateEyebrow={item.dateEyebrow}
+            startTime={item.startTime}
+            status={item.status}
+            statusLabel={item.statusLabel}
+            compact={item.compact}
+            canCancel={item.canCancel}
+            showCancelAction={item.showCancelAction}
+            isCancelling={cancelingAppointmentId === appointment.id}
+            onCancel={handleCancel}
+          />
+        </View>
       );
     },
-    [cancelingAppointmentId, handleCancel, rtlLayout.textAlign, t]
+    [colors.gold, colors.muted, colors.lineSoft, cancelingAppointmentId, handleCancel, t],
   );
 
   if (customerId == null) {
     return (
-      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+      <View style={{ flex: 1, padding: 20, backgroundColor: colors.bg }}>
         <StateCard description={t('customer.bookings.missingSession')} variant="error" />
       </View>
     );
@@ -283,7 +367,7 @@ export default function CustomerBookingsScreen() {
 
   if (appointmentsQuery.isError) {
     return (
-      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+      <View style={{ flex: 1, padding: 20, backgroundColor: colors.bg }}>
         <StateCard
           actionLabel={t('customer.bookings.retryButton')}
           description={t('customer.bookings.loadError')}
@@ -295,57 +379,55 @@ export default function CustomerBookingsScreen() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <FlashList
-        ListEmptyComponent={
-          <StateCard description={t('customer.bookings.empty')} variant="empty" />
-        }
-        ListHeaderComponent={
-          <View style={styles.headerContent}>
-            <Card>
-              <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
-                {t('customer.bookings.title')}
-              </Text>
-              <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.bookings.description')}</Text>
-            </Card>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View
+        style={{
+          paddingTop: insets.top + 8,
+          paddingHorizontal: 20,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+        }}
+      >
+        <SerifTitle size={32} weight="regular">
+          {t('customer.bookings.title')}
+        </SerifTitle>
+        <Eyebrow
+          size={11}
+          color={colors.gold}
+          style={{ letterSpacing: 1 }}
+        >
+          {t('customer.bookings.newButton')}
+        </Eyebrow>
+      </View>
 
-            {cancelError != null ? (
-              <Card>
-                <Text color="$error" textAlign={rtlLayout.textAlign}>{cancelError}</Text>
-              </Card>
-            ) : null}
-          </View>
-        }
-        contentContainerStyle={styles.listContent}
-        contentInsetAdjustmentBehavior="automatic"
-        data={rows}
+      <View style={{ marginTop: 18 }}>
+        <DateRail
+          dates={dates}
+          selectedDate={selectedDate}
+          onSelect={setSelectedDate}
+          countByDate={countByDate}
+          locale={i18n.language}
+        />
+      </View>
 
-        getItemType={(item) => item.type}
-        keyExtractor={(item) => item.id}
-        renderItem={renderRow}
-      />
+      <View style={{ flex: 1, marginTop: 18 }}>
+        <FlashList
+          ListEmptyComponent={
+            <View style={{ paddingHorizontal: 20 }}>
+              <StateCard description={t('customer.bookings.empty')} variant="empty" />
+            </View>
+          }
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingBottom: 24,
+          }}
+          data={rows}
+          getItemType={(item) => (item.type === 'header' ? 'header' : 'appointment')}
+          keyExtractor={(item) => item.id}
+          renderItem={renderRow}
+        />
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  errorContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  headerContent: {
-    gap: 12,
-  },
-  listContent: {
-    gap: 12,
-    padding: 16,
-    paddingBottom: 24,
-  },
-  screen: {
-    flex: 1,
-  },
-  sectionHeader: {
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-});

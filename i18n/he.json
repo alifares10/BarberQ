@@ -163,7 +163,10 @@
       "title": "התורים שלי",
       "unknownBarber": "ספר לא ידוע",
       "unknownShop": "עסק לא ידוע",
-      "upcomingSection": "קרוב"
+      "upcomingSection": "קרוב",
+      "newButton": "+ חדש",
+      "withBarber": "עם {{barber}}",
+      "withBarberAndServices": "עם {{barber}} · {{services}}"
     },
     "datetime": {
       "backToExplore": "חזרה לגילוי",
@@ -215,12 +218,26 @@
       "locationDenied": "גישה למיקום כבויה. השתמשו בחיפוש ידני לפי עיר או אזור כדי למצוא מספרות.",
       "noShops": "לא נמצאו מספרות שתואמות לחיפוש או לסינון הנוכחי.",
       "retryButton": "ניסיון חוזר",
-      "searchPlaceholder": "חיפוש לפי שם מספרה או אזור"
+      "searchPlaceholder": "חיפוש מספרות, ספרים, שירותים",
+      "greetingEyebrow": "בוקר טוב",
+      "greetingPrefix": "שלום,",
+      "greetingFallback": "חבר",
+      "nearYouTitle": "קרוב אליך",
+      "seeAll": "הכל",
+      "shopTagline": "מספרה"
     },
     "exploreDescription": "מסך זמני לחיפוש מספרות קרובות, מפה וגילוי עסקים.",
     "exploreTitle": "גילוי מספרות",
     "favoritesDescription": "מסך זמני לעסקים שמורים.",
-    "favoritesTitle": "מועדפים",
+    "favoritesTitle": "שמורים",
+    "favorites": {
+      "all": "הכל",
+      "shops": "מספרות",
+      "barbers": "ספרים",
+      "emptyTitle": "עדיין לא נשמר דבר.",
+      "emptyBody": "סמנו לב על מספרה או ספר כדי לשמור אותם כאן.",
+      "browseButton": "עיון במספרות"
+    },
     "shopDetail": {
       "barbersTitle": "בחירת ספר",
       "callShopButton": "התקשרות לעסק",
@@ -253,7 +270,21 @@
     "profileDescription": "ניהול החשבון, השפה וההתחברות במכשיר הזה.",
     "profileFallbackName": "חשבון לקוח",
     "profileFallbackPhone": "אין מספר טלפון זמין",
-    "profileTitle": "פרופיל"
+    "profileTitle": "פרופיל",
+    "profile": {
+      "editButton": "ערוך פרופיל",
+      "languageLabel": "שפה",
+      "notificationsLabel": "התראות",
+      "notificationsValue": "מופעל",
+      "locationLabel": "מיקום",
+      "locationValue": "בעת השימוש",
+      "privacyLabel": "פרטיות ונתונים",
+      "appearanceLabel": "מצב",
+      "appearanceValueDark": "כהה",
+      "appearanceValueLight": "בהיר",
+      "aboutLabel": "אודות BarberQ",
+      "aboutValue": "v 1.4"
+    }
   },
   "navigation": {
     "booking": "פתיחת זרימת הזמנה",
