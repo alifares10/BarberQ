@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +14,10 @@ import { fontFamilies } from '@/lib/fonts';
 import { useAppTheme } from '@/lib/theme';
 
 const DEFAULT_BLURHASH = 'L6Pj0^i_.AyE_3t7t7R**0o#DgR4';
+// Stable references for `expo-image` — passing fresh `{uri:…}` /
+// `{blurhash:…}` literals on every render makes the native image
+// bridge treat each render as a "new source" and re-decode.
+const DEFAULT_PLACEHOLDER = { blurhash: DEFAULT_BLURHASH };
 
 type ShopCardProps = {
   shopId: string;
@@ -47,6 +51,10 @@ export const ShopCard = memo(function ShopCard({
   const { t } = useTranslation();
   const { colors } = useAppTheme();
   const eyebrow = tagline ?? t('customer.explore.shopTagline');
+  const imageSource = useMemo(
+    () => (coverImageUrl != null ? { uri: coverImageUrl } : null),
+    [coverImageUrl],
+  );
 
   return (
     <Pressable onPress={() => onPress(shopId)}>
@@ -62,10 +70,10 @@ export const ShopCard = memo(function ShopCard({
         }}
       >
         {/* Layer 1 — cover photo */}
-        {coverImageUrl != null ? (
+        {imageSource ? (
           <Image
-            source={{ uri: coverImageUrl }}
-            placeholder={{ blurhash: DEFAULT_BLURHASH }}
+            source={imageSource}
+            placeholder={DEFAULT_PLACEHOLDER}
             contentFit="cover"
             transition={150}
             style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}

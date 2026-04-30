@@ -1,13 +1,7 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { memo } from 'react';
 import type { ViewStyle } from 'react-native';
-import { View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Svg, {
-  Defs,
-  RadialGradient as SvgRadialGradient,
-  Rect,
-  Stop,
-} from 'react-native-svg';
+import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/Text/Text';
 import { fontFamilies } from '@/lib/fonts';
@@ -47,13 +41,19 @@ const tonePalettes: Record<PhotoTone, [string, string, string]> = {
 };
 
 /**
- * Warm-toned photo placeholder. Three layers:
- *   1. SVG radial gradient — the tone palette (off-center hot spot)
- *   2. Expo linear-gradient — bottom vignette for legibility of overlaid copy
- *   3. Optional gold highlight blob via opacity tint
+ * Warm-toned photo placeholder. Three layers, all pure RN:
+ *   1. Diagonal `LinearGradient` with the tone palette — reads as an
+ *      off-center hot spot once the gold wash + vignette overlay it.
+ *   2. Translucent gold disc, top-left, for highlight warmth.
+ *   3. Bottom `LinearGradient` vignette for legibility of overlaid copy.
  *
- * For real photography, swap this in favor of <expo-image> with the same
- * <LinearGradient> overlay layers for legibility. Source: tokens.jsx:146-184.
+ * Was previously an `<Svg>` `<RadialGradient>`; rapid mount/unmount of
+ * SVG def trees caused intermittent iOS Hermes crashes (Explore chip
+ * filtering remounted every shop card's placeholder). The pure-RN
+ * implementation is visually near-identical and safe under remount.
+ *
+ * For real photography, swap this in favor of `<expo-image>` with the
+ * same vignette overlay. Source: tokens.jsx:146-184.
  */
 export const Photo = memo(function Photo({
   tone = 'chair',
@@ -80,24 +80,14 @@ export const Photo = memo(function Photo({
         style,
       ]}
     >
-      {/* Layer 1 — radial tone */}
-      <Svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 } as any}>
-        <Defs>
-          <SvgRadialGradient
-            id={`tone-${tone}`}
-            cx="30%"
-            cy="20%"
-            r="80%"
-            fx="30%"
-            fy="20%"
-          >
-            <Stop offset="0%" stopColor={hot} stopOpacity={1} />
-            <Stop offset="55%" stopColor={mid} stopOpacity={1} />
-            <Stop offset="100%" stopColor={cold} stopOpacity={1} />
-          </SvgRadialGradient>
-        </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill={`url(#tone-${tone})`} />
-      </Svg>
+      {/* Layer 1 — diagonal warm tone (substitute for the previous radial gradient) */}
+      <LinearGradient
+        colors={[hot, mid, cold]}
+        locations={[0, 0.55, 1]}
+        start={{ x: 0.3, y: 0.2 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
 
       {/* Layer 2 — gold highlight wash, top-left */}
       <View
@@ -119,7 +109,7 @@ export const Photo = memo(function Photo({
         colors={['transparent', `rgba(0,0,0,${dim})`]}
         start={{ x: 0.5, y: 0.3 }}
         end={{ x: 0.5, y: 1 }}
-        style={{ position: 'absolute', inset: 0 } as any}
+        style={StyleSheet.absoluteFill}
       />
 
       {label ? (

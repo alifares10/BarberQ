@@ -422,13 +422,12 @@ export default function ExploreScreen() {
           </View>
         ) : (
           <FlashList
-            // Force a remount when the category filter changes —
-            // FlashList v2 caches per-row layout offsets, and dropping
-            // most of the data on a chip tap can leave cards visually
-            // misplaced (same pattern as the Bookings fix). We
-            // intentionally don't key on `searchQuery` because that
-            // would remount on every keystroke.
-            key={selectedServiceFilter ?? '__all__'}
+            // We deliberately do NOT key on `selectedServiceFilter` —
+            // a force-remount tears down every `<ShopCard>` on each chip
+            // tap, which was the iOS crash trigger (rapid SVG/expo-image
+            // mount cycles). FlashList's `keyExtractor` already keeps
+            // rows stable across data changes; if v2 layout drift
+            // surfaces here, prefer `extraData` over a key remount.
             ListEmptyComponent={
               <View style={{ paddingHorizontal: 20 }}>
                 <StateCard description={t('customer.explore.noShops')} variant="empty" />
