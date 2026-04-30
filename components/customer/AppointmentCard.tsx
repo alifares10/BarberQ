@@ -111,7 +111,12 @@ function FullCard({
         flexDirection: 'row',
         gap: 14,
         padding: 16,
-        height: 116,
+        // `minHeight` not `height` — iOS Fraunces line metrics differ
+        // from the design's CSS rendering, so a hard 116px cap clipped
+        // the bottom row (time + status). 116 stays as the floor (84px
+        // photo + 32px vertical padding); cards grow by a few px when
+        // serif metrics need it.
+        minHeight: 116,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: colors.goldHair,
