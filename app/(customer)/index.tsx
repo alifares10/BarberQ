@@ -202,21 +202,24 @@ export default function ExploreScreen() {
     [filteredShops, t],
   );
 
-  // Stable reference for the map's marker list. Constructing this inline
-  // in JSX would hand `<ExploreMap>` a fresh array every keystroke even
-  // when `filteredShops` itself was unchanged, which (combined with the
-  // controlled-camera issue we already fixed) was the second native-side
-  // hazard behind the intermittent Explore crash.
+  // The map's marker list is derived from the UNFILTERED shop set on
+  // purpose — chips only narrow the rail below, never the map. Filtering
+  // markers on chip change caused rapid native MKMapView Marker
+  // insert/remove churn, which raced with React Native's Fabric mounting
+  // transaction and crashed `-[__NSArrayM insertObject:atIndex:]` (see
+  // crash report on iOS 18). Keeping `mapShops` stable across chip taps
+  // also matches the better UX: pan the map freely regardless of which
+  // category is active.
   const mapShops = useMemo(
     () =>
-      filteredShops.map(({ shop }) => ({
+      shopsWithDistance.map(({ shop }) => ({
         address: shop.address,
         id: shop.id,
         latitude: shop.latitude,
         longitude: shop.longitude,
         name: shop.name,
       })),
-    [filteredShops],
+    [shopsWithDistance],
   );
 
   const mapCenter = useMemo(
