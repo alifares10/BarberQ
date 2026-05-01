@@ -27,6 +27,7 @@ import { fetchActiveShops, type CustomerShop } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
 import { useAppTheme } from '@/lib/theme';
 import { useAuthStore } from '@/stores/auth-store';
+import { useBookingStore } from '@/stores/booking-store';
 
 const TEL_AVIV_COORDINATES = {
   latitude: 32.0853,
@@ -80,6 +81,10 @@ export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const profile = useAuthStore((state) => state.profile);
+  const setSelectedShopId = useBookingStore((state) => state.setSelectedShopId);
+  const setSelectedShopDistanceKm = useBookingStore(
+    (state) => state.setSelectedShopDistanceKm,
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceFilter, setSelectedServiceFilter] = useState<string | null>(null);
   const [locationState, setLocationState] = useState<LocationState>('unknown');
@@ -233,9 +238,17 @@ export default function ExploreScreen() {
 
   const handleOpenShop = useCallback(
     (shopId: string) => {
+      // Stash the distance so Shop Detail can render it without
+      // re-requesting GPS or re-running the active-shops query. The
+      // booking store also seeds `selectedShopId` here so the new
+      // /booking/barber route can read it directly without depending
+      // on the URL param flow.
+      const matched = shopsWithDistance.find(({ shop }) => shop.id === shopId);
+      setSelectedShopId(shopId);
+      setSelectedShopDistanceKm(matched?.distanceKm ?? null);
       router.push({ params: { shopId }, pathname: '/booking/[shopId]' });
     },
-    [router],
+    [router, setSelectedShopDistanceKm, setSelectedShopId, shopsWithDistance],
   );
 
   const renderShop = useCallback<ListRenderItem<ShopRow>>(

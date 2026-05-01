@@ -30,6 +30,7 @@ export default function BookingLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="[shopId]" />
+      <Stack.Screen name="barber" />
       <Stack.Screen name="services" />
       <Stack.Screen name="datetime" />
     </Stack>

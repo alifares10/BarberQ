@@ -2,13 +2,24 @@ import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { Button, ButtonText, Card, LoadingScreen, ServiceItem, StateCard, Text } from '@/components';
+import {
+  CTA,
+  LoadingScreen,
+  ProgressBar,
+  SerifTitle,
+  ServiceItem,
+  StateCard,
+  Text,
+} from '@/components';
+import { ModalHeader } from '@/components/booking/ModalHeader';
+import { RunningTotalBar } from '@/components/booking/RunningTotalBar';
 import { fetchServicesByBarberId } from '@/lib/customer/api';
 import { customerQueryKeys } from '@/lib/customer/query-keys';
-import { getRtlLayout } from '@/lib/rtl';
+import { fontFamilies } from '@/lib/fonts';
 import { useAppTheme } from '@/lib/theme';
 import { useBookingStore } from '@/stores/booking-store';
 
@@ -20,15 +31,22 @@ type ServiceRow = {
   price: number;
 };
 
+const STEP = 2;
+const TOTAL = 4;
+
 export default function ServicesScreen() {
-  const { i18n, t } = useTranslation();
-  const rtlLayout = getRtlLayout(i18n.language);
+  const { t } = useTranslation();
   const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const selectedBarberId = useBookingStore((state) => state.selectedBarberId);
   const selectedServiceIdsInStore = useBookingStore((state) => state.selectedServiceIds);
   const setSelectedServiceIds = useBookingStore((state) => state.setSelectedServiceIds);
-  const [selectedServiceIds, setSelectedServiceIdsLocal] = useState<string[]>(selectedServiceIdsInStore);
+  const setSelectedDate = useBookingStore((state) => state.setSelectedDate);
+  const setSelectedTime = useBookingStore((state) => state.setSelectedTime);
+  const [selectedServiceIds, setSelectedServiceIdsLocal] = useState<string[]>(
+    selectedServiceIdsInStore,
+  );
   const servicesQuery = useQuery({
     enabled: selectedBarberId != null,
     queryFn: () => fetchServicesByBarberId(selectedBarberId ?? ''),
@@ -38,9 +56,12 @@ export default function ServicesScreen() {
         : ['customer', 'services', 'unknown'],
   });
 
-  const selectedServiceIdSet = useMemo(() => new Set(selectedServiceIds), [selectedServiceIds]);
+  const selectedServiceIdSet = useMemo(
+    () => new Set(selectedServiceIds),
+    [selectedServiceIds],
+  );
   const services = useMemo(() => servicesQuery.data ?? [], [servicesQuery.data]);
-  const rows = useMemo(
+  const rows = useMemo<ServiceRow[]>(
     () =>
       services.map((service) => ({
         duration: service.duration,
@@ -48,35 +69,32 @@ export default function ServicesScreen() {
         isSelected: selectedServiceIdSet.has(service.id),
         name: service.name,
         price: service.price,
-      })) satisfies ServiceRow[],
-    [selectedServiceIdSet, services]
+      })),
+    [selectedServiceIdSet, services],
   );
-  const totals = useMemo(() => {
-    return services.reduce(
-      (accumulator, service) => {
-        if (!selectedServiceIdSet.has(service.id)) {
-          return accumulator;
-        }
-
-        return {
-          totalDuration: accumulator.totalDuration + service.duration,
-          totalPrice: accumulator.totalPrice + service.price,
-        };
-      },
-      {
-        totalDuration: 0,
-        totalPrice: 0,
-      }
-    );
-  }, [selectedServiceIdSet, services]);
+  const totals = useMemo(
+    () =>
+      services.reduce(
+        (accumulator, service) => {
+          if (!selectedServiceIdSet.has(service.id)) {
+            return accumulator;
+          }
+          return {
+            totalDuration: accumulator.totalDuration + service.duration,
+            totalPrice: accumulator.totalPrice + service.price,
+          };
+        },
+        { totalDuration: 0, totalPrice: 0 },
+      ),
+    [selectedServiceIdSet, services],
+  );
 
   const handleToggleService = useCallback((serviceId: string) => {
-    setSelectedServiceIdsLocal((currentIds) => {
-      if (currentIds.includes(serviceId)) {
-        return currentIds.filter((id) => id !== serviceId);
+    setSelectedServiceIdsLocal((current) => {
+      if (current.includes(serviceId)) {
+        return current.filter((id) => id !== serviceId);
       }
-
-      return [...currentIds, serviceId];
+      return [...current, serviceId];
     });
   }, []);
 
@@ -84,12 +102,39 @@ export default function ServicesScreen() {
     if (selectedServiceIds.length === 0) {
       return;
     }
-
+    // If the service set changed, reset date/time — durations may have
+    // changed and a previously valid slot may no longer fit.
+    const previous = new Set(selectedServiceIdsInStore);
+    const next = new Set(selectedServiceIds);
+    const sameSet =
+      previous.size === next.size &&
+      [...previous].every((id) => next.has(id));
+    if (!sameSet) {
+      setSelectedDate(null);
+      setSelectedTime(null);
+    }
     setSelectedServiceIds(selectedServiceIds);
     router.push('/booking/datetime');
-  }, [router, selectedServiceIds, setSelectedServiceIds]);
+  }, [
+    router,
+    selectedServiceIds,
+    selectedServiceIdsInStore,
+    setSelectedDate,
+    setSelectedServiceIds,
+    setSelectedTime,
+  ]);
 
-  const renderService = useCallback<ListRenderItem<ServiceRow>>(
+  const handleBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+    }
+  }, [router]);
+
+  const handleClose = useCallback(() => {
+    router.replace('/(customer)');
+  }, [router]);
+
+  const renderRow = useCallback<ListRenderItem<ServiceRow>>(
     ({ item }) => (
       <ServiceItem
         duration={item.duration}
@@ -100,12 +145,14 @@ export default function ServicesScreen() {
         serviceId={item.id}
       />
     ),
-    [handleToggleService]
+    [handleToggleService],
   );
 
   if (selectedBarberId == null) {
     return (
-      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+      <View
+        style={{ flex: 1, padding: 16, backgroundColor: colors.bg, justifyContent: 'center' }}
+      >
         <StateCard
           actionLabel={t('customer.serviceSelection.backToExplore')}
           description={t('customer.serviceSelection.missingBarber')}
@@ -116,88 +163,79 @@ export default function ServicesScreen() {
     );
   }
 
-  if (servicesQuery.isPending) {
-    return <LoadingScreen />;
-  }
-
-  if (servicesQuery.isError) {
-    return (
-      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
-        <StateCard
-          actionLabel={t('customer.serviceSelection.retryButton')}
-          description={t('customer.serviceSelection.loadError')}
-          onAction={() => void servicesQuery.refetch()}
-          variant="error"
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View style={{ paddingTop: insets.top, gap: 12 }}>
+        <ProgressBar step={STEP} total={TOTAL} />
+        <ModalHeader
+          title={t('booking.stepLabel')}
+          step={STEP}
+          total={TOTAL}
+          onBack={handleBack}
+          onClose={handleClose}
         />
       </View>
-    );
-  }
 
-  return (
-    <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <FlashList
-        ListEmptyComponent={
-          <StateCard description={t('customer.serviceSelection.empty')} variant="empty" />
-        }
-        ListHeaderComponent={
-          <Card>
-            <Text fontFamily="$heading" fontSize={28} fontWeight="800" lineHeight={34} textAlign={rtlLayout.textAlign}>
-              {t('customer.serviceSelection.title')}
-            </Text>
-            <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>{t('customer.serviceSelection.description')}</Text>
-          </Card>
-        }
-        contentContainerStyle={styles.listContent}
-        contentInsetAdjustmentBehavior="automatic"
-        data={rows}
+      <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+        <SerifTitle size={28}>{t('booking.servicesHeadlineA')}</SerifTitle>
+        <SerifTitle size={28} italic color={colors.gold}>
+          {t('booking.servicesHeadlineB')}
+        </SerifTitle>
+        <Text
+          style={{
+            fontFamily: fontFamilies.sans.regular,
+            fontSize: 12,
+            color: colors.muted,
+            marginTop: 8,
+          }}
+        >
+          {t('booking.servicesSubtitle')}
+        </Text>
+      </View>
 
-        keyExtractor={(item) => item.id}
-        renderItem={renderService}
-      />
+      <View style={{ flex: 1, paddingHorizontal: 20, marginTop: 24 }}>
+        {servicesQuery.isPending ? (
+          <LoadingScreen />
+        ) : servicesQuery.isError ? (
+          <StateCard
+            actionLabel={t('customer.serviceSelection.retryButton')}
+            description={t('customer.serviceSelection.loadError')}
+            onAction={() => void servicesQuery.refetch()}
+            variant="error"
+          />
+        ) : (
+          <FlashList
+            ListEmptyComponent={
+              <StateCard description={t('customer.serviceSelection.empty')} variant="empty" />
+            }
+            contentContainerStyle={{ paddingBottom: insets.bottom + 200 }}
+            data={rows}
+            keyExtractor={(item) => item.id}
+            renderItem={renderRow}
+          />
+        )}
+      </View>
 
-      <View style={[styles.bottomBar, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
-        <Card>
-          <Text color="$colorMuted" textAlign={rtlLayout.textAlign}>
-            {t('customer.serviceSelection.selectedCount', {
-              count: selectedServiceIds.length,
-            })}
-          </Text>
-          <Text textAlign={rtlLayout.textAlign}>
-            {t('customer.serviceSelection.totalDuration', {
-              minutes: totals.totalDuration,
-            })}
-          </Text>
-          <Text textAlign={rtlLayout.textAlign}>
-            {t('customer.serviceSelection.totalPrice', {
-              price: totals.totalPrice.toFixed(2),
-            })}
-          </Text>
-
-          <Button disabled={selectedServiceIds.length === 0} onPress={handleContinue}>
-            <ButtonText>{t('customer.serviceSelection.nextButton')}</ButtonText>
-          </Button>
-        </Card>
+      <View
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: colors.bg,
+          paddingHorizontal: 20,
+          paddingBottom: insets.bottom + 22,
+        }}
+      >
+        <RunningTotalBar
+          count={selectedServiceIds.length}
+          totalMinutes={totals.totalDuration}
+          totalPrice={totals.totalPrice}
+        />
+        <CTA disabled={selectedServiceIds.length === 0} onPress={handleContinue}>
+          {t('booking.servicesContinueCta')}
+        </CTA>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  bottomBar: {
-    borderTopWidth: 1,
-    padding: 16,
-    paddingTop: 10,
-  },
-  errorContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  listContent: {
-    gap: 12,
-    padding: 16,
-    paddingBottom: 24,
-  },
-  screen: {
-    flex: 1,
-  },
-});

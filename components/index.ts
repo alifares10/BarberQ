@@ -12,6 +12,7 @@ export { LanguageSettingsCard } from '@/components/LanguageSettingsCard';
 export { LoadingScreen } from '@/components/LoadingScreen';
 export { Photo } from '@/components/Photo';
 export { PlaceholderScreen } from '@/components/PlaceholderScreen';
+export { ProgressBar } from '@/components/ProgressBar';
 export { SerifTitle } from '@/components/SerifTitle';
 export { StateCard } from '@/components/StateCard';
 export { Status } from '@/components/Status';
