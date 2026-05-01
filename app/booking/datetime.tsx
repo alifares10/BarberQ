@@ -920,7 +920,9 @@ function ConfirmSheet({
           />
         </View>
 
-        {/* Total */}
+        {/* Total — flex-end (not baseline) avoids iOS clipping the
+            big serif numerals' ascenders. See RunningTotalBar for the
+            full reasoning. */}
         <View
           style={{
             marginTop: 20,
@@ -929,10 +931,11 @@ function ConfirmSheet({
             borderTopColor: colors.goldBorder,
             flexDirection: 'row',
             justifyContent: 'space-between',
-            alignItems: 'baseline',
+            alignItems: 'flex-end',
+            gap: 12,
           }}
         >
-          <View>
+          <View style={{ flexShrink: 1 }}>
             <Text
               style={{
                 fontFamily: fontFamilies.mono.regular,
@@ -959,6 +962,7 @@ function ConfirmSheet({
             style={{
               fontFamily: fontFamilies.serif.medium,
               fontSize: 32,
+              lineHeight: 38,
               color: colors.gold,
               fontVariant: ['tabular-nums'],
             }}

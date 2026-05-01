@@ -27,6 +27,13 @@ export const RunningTotalBar = memo(function RunningTotalBar({
   const { t } = useTranslation();
   const { colors } = useAppTheme();
 
+  // `alignItems: 'flex-end'` not `baseline` — the design uses CSS
+  // baseline alignment, but RN's baseline alignment uses the FIRST
+  // line of a multi-line column, which puts the big price's ascender
+  // area above the row's measured height and iOS clips the top of
+  // the digits. flex-end aligns the price's bottom with the bottom
+  // of the left column, matching the design's visual intent (price
+  // sits next to "Running total" label) and avoiding the clip.
   return (
     <View
       style={{
@@ -35,10 +42,11 @@ export const RunningTotalBar = memo(function RunningTotalBar({
         paddingVertical: 14,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'baseline',
+        alignItems: 'flex-end',
+        gap: 12,
       }}
     >
-      <View>
+      <View style={{ flexShrink: 1 }}>
         <Text
           style={{
             fontFamily: fontFamilies.mono.regular,
@@ -65,6 +73,9 @@ export const RunningTotalBar = memo(function RunningTotalBar({
         style={{
           fontFamily: fontFamilies.serif.medium,
           fontSize: 32,
+          // Explicit lineHeight prevents iOS from cropping serif
+          // ascenders/descenders on tall numerals.
+          lineHeight: 38,
           color: colors.gold,
           fontVariant: ['tabular-nums'],
         }}
